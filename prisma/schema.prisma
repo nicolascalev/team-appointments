@@ -1,0 +1,195 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String // hashed password
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teamMembers  TeamMember[]
+  appointments Appointment[]
+  invites      Invite[]
+
+  @@map("users")
+}
+
+model Team {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  location     String?
+  contactEmail String?
+  contactPhone String?
+  timezone     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  members       TeamMember[]
+  employees     Employee[]
+  services      Service[]
+  appointments  Appointment[]
+  settings      TeamSettings?
+  businessHours BusinessHour[]
+  invites       Invite[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id       String   @id @default(uuid())
+  userId   String
+  teamId   String
+  role     TeamRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
+
+  @@unique([userId, teamId])
+  @@map("team_members")
+}
+
+enum TeamRole {
+  ADMIN
+  MEMBER
+}
+
+model Invite {
+  id        String   @id @default(uuid())
+  email     String
+  teamId    String
+  role      TeamRole @default(MEMBER)
+  token     String   @unique
+  expiresAt DateTime
+
+  team Team @relation(fields: [teamId], references: [id])
+
+  @@map("invites")
+}
+
+model Employee {
+  id       String  @id @default(uuid())
+  name     String
+  bio      String?
+  isActive Boolean @default(true)
+  teamId   String
+  userId   String?
+
+  team Team  @relation(fields: [teamId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+
+  availability EmployeeAvailability[]
+  daysOff      EmployeeDayOff[]
+  services     Service[]              @relation("EmployeeServices")
+  appointments Appointment[]
+
+  @@map("employees")
+}
+
+model EmployeeAvailability {
+  id         String @id @default(uuid())
+  employeeId String
+  dayOfWeek  Int // 0 = Sunday
+  startTime  String // "09:00"
+  endTime    String // "17:00"
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("employee_availability")
+}
+
+model EmployeeDayOff {
+  id         String   @id @default(uuid())
+  employeeId String
+  date       DateTime
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date])
+  @@map("employee_days_off")
+}
+
+model Service {
+  id           String  @id @default(uuid())
+  teamId       String
+  name         String
+  description  String?
+  duration     Int // in minutes
+  bufferBefore Int     @default(0)
+  bufferAfter  Int     @default(0)
+  price        Float   @default(0)
+
+  team         Team          @relation(fields: [teamId], references: [id])
+  employees    Employee[]    @relation("EmployeeServices")
+  appointments Appointment[]
+
+  @@map("services")
+}
+
+model Appointment {
+  id          String            @id @default(uuid())
+  teamId      String
+  employeeId  String
+  serviceId   String
+  userId      String?
+  clientName  String
+  clientEmail String
+  clientPhone String?
+  start       DateTime
+  end         DateTime
+  status      AppointmentStatus @default(CONFIRMED)
+  notes       String?
+
+  team     Team     @relation(fields: [teamId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+  service  Service  @relation(fields: [serviceId], references: [id])
+  user     User?    @relation(fields: [userId], references: [id])
+
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  CANCELLED
+  RESCHEDULED
+  COMPLETED
+}
+
+model TeamSettings {
+  id                         String  @id @default(uuid())
+  teamId                     String  @unique
+  minBookingNoticeMinutes    Int     @default(60)
+  cancellationPolicy         String?
+  maxAppointmentsPerDay      Int?
+  maxAppointmentsPerEmployee Int?
+
+  team Team @relation(fields: [teamId], references: [id])
+
+  @@map("team_settings")
+}
+
+model BusinessHour {
+  id        String @id @default(uuid())
+  teamId    String
+  dayOfWeek Int // 0-6
+  openTime  String // "09:00"
+  closeTime String // "17:00"
+
+  team Team @relation(fields: [teamId], references: [id])
+
+  @@map("business_hours")
+}

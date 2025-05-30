@@ -1,0 +1,70 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Provides context and guidance for developing a customizable scheduling application for studios and teams.
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.prisma"
+  - "**/*.sql"
+---
+
+## 🧭 Project Overview
+
+This project is a scheduling application tailored for studios (e.g., hair salons, tattoo shops) and their teams. It enables clients to book appointments with individual employees or the entire studio. Key features include:
+
+- Customizable service durations (e.g., 30, 60, 90 minutes)
+- Configurable buffer times between appointments
+- Limits on daily appointments per studio and per employee
+- Support for multiple employees with individual schedules
+- Support for days closed or blocks to not be available on specific times
+- Client-facing booking interface with service and time slot selection
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js with Mantine components
+- **Backend**: Next js serverless functions with Prisma ORM
+- **Database**: An sql database but prisma takes care of the syntax
+- **Authentication**: Custom made
+- **Deployment**: Vercel
+
+## 🗂️ Database Schema Considerations
+
+- Consider our schema [schema.prisma](mdc:prisma/schema.prisma) and mention if we need to make changes to it.
+
+## 🧑‍💼 Admin Panel Pages
+
+- **Dashboard**: Overview of appointments, employee availability, and key metrics.
+- **Studio Settings**: Configure studio details, operating hours, and booking policies.
+- **Team Management**: Add/edit employees, set individual schedules, availability toggle, and assign services.
+- **Services Management**: Create and manage service offerings.
+- **Booking Rules**: Define global rules like buffer times and appointment limits.
+- **Notifications**: Set up email/SMS reminders and confirmations.
+- **Calendar View**: Visual representation of bookings and availability.
+
+## 📅 Client Booking Flow
+
+1. **Service Selection**: Clients choose a service from available offerings.
+2. **Employee Selection** (optional): Option to select a specific employee or 'Any Available'.
+3. **Date & Time Selection**: Interactive calendar displaying available slots.
+4. **Client Information**: Form to collect client details and preferences.
+5. **Confirmation**: Summary of booking details with confirmation message.
+6. **Post-Booking**: Option to add appointment to personal calendar and receive notifications.
+
+## 🎨 UX Considerations
+
+- Use Mantine components for a consistent and responsive UI.
+- Implement real-time availability checks to prevent double bookings.
+- Provide clear feedback and validation throughout the booking process.
+- Ensure accessibility and mobile responsiveness across all pages.
+
+## 🧠 AI Guidance
+
+When generating code or providing suggestions:
+
+- Follow the outlined admin and client workflows.
+- Utilize Mantine UI components for frontend development.
+- Maintain consistency with the project's architecture and design principles.
