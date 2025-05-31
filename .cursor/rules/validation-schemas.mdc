@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Always create validation schemas in [validation-schemas.ts](mdc:src/lib/validation-schemas.ts) so we can reuse them and have them in the same place. We are using zod.

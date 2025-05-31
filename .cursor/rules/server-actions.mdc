@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+All our backend server actions will be in /src/actions.
+
+The file where they are located always have to make sense. For example login() and register() and other authentication-related
+functions will be in /src/actions/auth.ts

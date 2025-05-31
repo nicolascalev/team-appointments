@@ -20,9 +20,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  teamMembers  TeamMember[]
+  memberOf     TeamMember[]  @relation("UserMemberOf")
   appointments Appointment[]
-  invites      Invite[]
+  invites      Invite[]      @relation("UserInvites")
 
   @@map("users")
 }
@@ -39,7 +39,6 @@ model Team {
   updatedAt    DateTime @updatedAt
 
   members       TeamMember[]
-  employees     Employee[]
   services      Service[]
   appointments  Appointment[]
   settings      TeamSettings?
@@ -50,14 +49,25 @@ model Team {
 }
 
 model TeamMember {
-  id       String   @id @default(uuid())
-  userId   String
-  teamId   String
-  role     TeamRole @default(MEMBER)
-  joinedAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
+  id        String   @id @default(uuid())
+  userId    String
+  teamId    String
+  isActive  Boolean  @default(true)
+  bio       String?
+  role      TeamRole @default(MEMBER)
+  joinedAt  DateTime @default(now())
+  
+  // Employee-specific fields
+  isSchedulable Boolean @default(false)
+  
+  user User @relation("UserMemberOf", fields: [userId], references: [id])
   team Team @relation(fields: [teamId], references: [id])
+  
+  // Employee relations
+  availability EmployeeAvailability[]
+  blockOffs    EmployeeBlockOff[]
+  services     Service[]              @relation("EmployeeServices")
+  appointments Appointment[]
 
   @@unique([userId, teamId])
   @@map("team_members")
@@ -75,52 +85,36 @@ model Invite {
   role      TeamRole @default(MEMBER)
   token     String   @unique
   expiresAt DateTime
+  userId    String?
 
-  team Team @relation(fields: [teamId], references: [id])
+  team Team  @relation(fields: [teamId], references: [id])
+  user User? @relation("UserInvites", fields: [userId], references: [id])
 
   @@map("invites")
 }
 
-model Employee {
-  id       String  @id @default(uuid())
-  name     String
-  bio      String?
-  isActive Boolean @default(true)
-  teamId   String
-  userId   String?
-
-  team Team  @relation(fields: [teamId], references: [id])
-  user User? @relation(fields: [userId], references: [id])
-
-  availability EmployeeAvailability[]
-  daysOff      EmployeeDayOff[]
-  services     Service[]              @relation("EmployeeServices")
-  appointments Appointment[]
-
-  @@map("employees")
-}
-
 model EmployeeAvailability {
   id         String @id @default(uuid())
-  employeeId String
+  teamMemberId String
   dayOfWeek  Int // 0 = Sunday
   startTime  String // "09:00"
   endTime    String // "17:00"
 
-  employee Employee @relation(fields: [employeeId], references: [id])
+  teamMember TeamMember @relation(fields: [teamMemberId], references: [id])
 
   @@map("employee_availability")
 }
 
-model EmployeeDayOff {
+model EmployeeBlockOff {
   id         String   @id @default(uuid())
-  employeeId String
-  date       DateTime
+  teamMemberId String
+  start      DateTime
+  end        DateTime
+  reason     String?
 
-  employee Employee @relation(fields: [employeeId], references: [id])
+  teamMember TeamMember @relation(fields: [teamMemberId], references: [id])
 
-  @@unique([employeeId, date])
-  @@map("employee_days_off")
+  @@map("employee_block_offs")
 }
 
 model Service {
@@ -129,12 +123,13 @@ model Service {
   name         String
   description  String?
   duration     Int // in minutes
-  bufferBefore Int     @default(0)
-  bufferAfter  Int     @default(0)
-  price        Float   @default(0)
+  buffer       Int     @default(0)
+  price        Float?  @default(0)
+  currencyCode String? @default("USD")
+  category     String?
 
   team         Team          @relation(fields: [teamId], references: [id])
-  employees    Employee[]    @relation("EmployeeServices")
+  teamMembers  TeamMember[]  @relation("EmployeeServices")
   appointments Appointment[]
 
   @@map("services")
@@ -143,7 +138,7 @@ model Service {
 model Appointment {
   id          String            @id @default(uuid())
   teamId      String
-  employeeId  String
+  teamMemberId String
   serviceId   String
   userId      String?
   clientName  String
@@ -155,7 +150,7 @@ model Appointment {
   notes       String?
 
   team     Team     @relation(fields: [teamId], references: [id])
-  employee Employee @relation(fields: [employeeId], references: [id])
+  teamMember TeamMember @relation(fields: [teamMemberId], references: [id])
   service  Service  @relation(fields: [serviceId], references: [id])
   user     User?    @relation(fields: [userId], references: [id])
 

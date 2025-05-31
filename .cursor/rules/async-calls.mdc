@@ -1,7 +1,7 @@
 ---
-description: When we need to run async functions
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 Please use [try-catch.ts](mdc:src/lib/try-catch.ts) to wrap our async calls. That way we have better error catching and not nested "try catch" all over the place.
 Never name the result just 'result' or something like that. Use descriptive names like "availableTeamMembersResult" so we can then use availableTeamMembersResult.data and availableTeamMembersResult.error.
