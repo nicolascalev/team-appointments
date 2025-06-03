@@ -17,6 +17,7 @@ import {
 } from "@mantine/core";
 import AdminTabs from "./AdminTabs";
 import { IconChevronRight } from "@tabler/icons-react";
+import PhotoInput from "@/components/PhotoInput";
 
 async function AdminPage({
   searchParams,
@@ -46,6 +47,7 @@ async function AdminPage({
             </div>
             <div className="flex flex-col gap-4">
               <form className="flex flex-col gap-4">
+                <PhotoInput />
                 <TextInput
                   label="Team Name"
                   placeholder="Team Name"

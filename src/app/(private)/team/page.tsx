@@ -1,3 +1,4 @@
+import CreateTeamDrawer from "@/components/CreateTeamDrawer";
 import TeamSelect from "@/components/TeamSelect";
 import {
   Avatar,
@@ -10,6 +11,7 @@ import {
   Text,
   Textarea,
 } from "@mantine/core";
+import { IconPlus } from "@tabler/icons-react";
 import React from "react";
 
 async function TeamPage() {
@@ -22,6 +24,18 @@ async function TeamPage() {
         <div>
           <Text fw={500}>Active team</Text>
           <Text c="dimmed">Select the team you want to see</Text>
+          <CreateTeamDrawer
+            trigger={
+              <Button
+                variant="default"
+                size="sm"
+                leftSection={<IconPlus size={14} />}
+                mt="xs"
+              >
+                Create team
+              </Button>
+            }
+          />
         </div>
         <div className="flex flex-col gap-4">
           <TeamSelect />

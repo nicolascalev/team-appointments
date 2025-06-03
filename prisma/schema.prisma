@@ -12,13 +12,15 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  password  String // hashed password
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  email                String   @unique
+  name                 String?
+  password             String // hashed password
+  phone                String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  currentSessionTeamId String?
+  currentSessionTeam   Team?    @relation("UserCurrentSessionTeam", fields: [currentSessionTeamId], references: [id])
 
   memberOf     TeamMember[]  @relation("UserMemberOf")
   appointments Appointment[]
@@ -37,15 +39,16 @@ model Team {
   contactEmail String?
   contactPhone String?
   timezone     String
+  avatarUrl    String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-
-  members       TeamMember[]
-  services      Service[]
-  appointments  Appointment[]
-  settings      TeamSettings?
-  businessHours BusinessHour[]
-  invites       Invite[]
+  members             TeamMember[]
+  services            Service[]
+  appointments        Appointment[]
+  settings            TeamSettings?
+  businessHours       BusinessHour[]
+  invites             Invite[]
+  currentSessionUsers User[]         @relation("UserCurrentSessionTeam")
 
   @@map("teams")
 }
