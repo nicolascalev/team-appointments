@@ -29,6 +29,8 @@ model User {
 
 model Team {
   id           String   @id @default(uuid())
+  category     String?
+  bio          String?
   name         String
   slug         String   @unique
   location     String?
@@ -49,20 +51,20 @@ model Team {
 }
 
 model TeamMember {
-  id        String   @id @default(uuid())
-  userId    String
-  teamId    String
-  isActive  Boolean  @default(true)
-  bio       String?
-  role      TeamRole @default(MEMBER)
-  joinedAt  DateTime @default(now())
-  
+  id       String   @id @default(uuid())
+  userId   String
+  teamId   String
+  isActive Boolean  @default(true)
+  bio      String?
+  role     TeamRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
   // Employee-specific fields
   isSchedulable Boolean @default(false)
-  
+
   user User @relation("UserMemberOf", fields: [userId], references: [id])
   team Team @relation(fields: [teamId], references: [id])
-  
+
   // Employee relations
   availability EmployeeAvailability[]
   blockOffs    EmployeeBlockOff[]
@@ -94,11 +96,11 @@ model Invite {
 }
 
 model EmployeeAvailability {
-  id         String @id @default(uuid())
+  id           String @id @default(uuid())
   teamMemberId String
-  dayOfWeek  Int // 0 = Sunday
-  startTime  String // "09:00"
-  endTime    String // "17:00"
+  dayOfWeek    Int // 0 = Sunday
+  startTime    String // "09:00"
+  endTime      String // "17:00"
 
   teamMember TeamMember @relation(fields: [teamMemberId], references: [id])
 
@@ -106,11 +108,11 @@ model EmployeeAvailability {
 }
 
 model EmployeeBlockOff {
-  id         String   @id @default(uuid())
+  id           String   @id @default(uuid())
   teamMemberId String
-  start      DateTime
-  end        DateTime
-  reason     String?
+  start        DateTime
+  end          DateTime
+  reason       String?
 
   teamMember TeamMember @relation(fields: [teamMemberId], references: [id])
 
@@ -136,23 +138,23 @@ model Service {
 }
 
 model Appointment {
-  id          String            @id @default(uuid())
-  teamId      String
+  id           String            @id @default(uuid())
+  teamId       String
   teamMemberId String
-  serviceId   String
-  userId      String?
-  clientName  String
-  clientEmail String
-  clientPhone String?
-  start       DateTime
-  end         DateTime
-  status      AppointmentStatus @default(CONFIRMED)
-  notes       String?
+  serviceId    String
+  userId       String?
+  clientName   String
+  clientEmail  String
+  clientPhone  String?
+  start        DateTime
+  end          DateTime
+  status       AppointmentStatus @default(CONFIRMED)
+  notes        String?
 
-  team     Team     @relation(fields: [teamId], references: [id])
+  team       Team       @relation(fields: [teamId], references: [id])
   teamMember TeamMember @relation(fields: [teamMemberId], references: [id])
-  service  Service  @relation(fields: [serviceId], references: [id])
-  user     User?    @relation(fields: [userId], references: [id])
+  service    Service    @relation(fields: [serviceId], references: [id])
+  user       User?      @relation(fields: [userId], references: [id])
 
   @@map("appointments")
 }

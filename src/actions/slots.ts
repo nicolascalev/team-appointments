@@ -170,3 +170,5 @@ export async function getAvailableSlots({
 
   return slotsByEmployee;
 }
+
+// TODO: generate function to validate if a slot is available, that way we can check at the time of booking just in case the user left the page open for a while

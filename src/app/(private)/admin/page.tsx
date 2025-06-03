@@ -26,7 +26,7 @@ async function AdminPage({
   const { tab = "General" } = (await searchParams) as { tab: string };
 
   return (
-    <Container size="md">
+    <Container size="md" p={0}>
       <div>
         <Text fw={500} mt="xl" size="lg">
           Admin

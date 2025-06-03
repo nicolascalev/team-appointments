@@ -18,7 +18,7 @@ function AdminTabs({ activeTab }: { activeTab: string }) {
           whiteSpace: "nowrap",
           scrollbarWidth: "none",
           msOverflowStyle: "none",
-          "&::-webkit-scrollbar": {
+          "&::WebkitScrollbar": {
             display: "none",
           },
         }}

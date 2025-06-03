@@ -14,7 +14,7 @@ import React from "react";
 
 async function TeamPage() {
   return (
-    <Container size="md">
+    <Container size="md" p={0}>
       <Text fw={500} my="xl" size="lg">
         Team Settings
       </Text>
