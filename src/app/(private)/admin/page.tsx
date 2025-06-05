@@ -1,5 +1,8 @@
-import BusinessHours from "@/components/BusinessHours";
+import { getUserCurrentSessionTeam } from "@/actions/team";
 import LabelWithInfo from "@/components/LabelWithInfo";
+import TeamBusinessHoursForm from "@/components/TeamBusinessHoursForm";
+import TeamForm from "@/components/TeamForm";
+import { tryCatch } from "@/lib/try-catch";
 import {
   Avatar,
   Box,
@@ -13,11 +16,10 @@ import {
   SimpleGrid,
   Text,
   Textarea,
-  TextInput,
 } from "@mantine/core";
-import AdminTabs from "./AdminTabs";
 import { IconChevronRight } from "@tabler/icons-react";
-import PhotoInput from "@/components/PhotoInput";
+import { redirect } from "next/navigation";
+import AdminTabs from "./AdminTabs";
 
 async function AdminPage({
   searchParams,
@@ -26,6 +28,12 @@ async function AdminPage({
 }) {
   const { tab = "General" } = (await searchParams) as { tab: string };
 
+  const { data: team, error } = await tryCatch(getUserCurrentSessionTeam());
+
+  if (error || !team) {
+    redirect("/team");
+  }
+
   return (
     <Container size="md" p={0}>
       <div>
@@ -33,8 +41,10 @@ async function AdminPage({
           Admin
         </Text>
         <Group mb="xl" mt="md">
-          <Avatar color="teal">TA</Avatar>
-          <Text>Team Alpha</Text>
+          <Avatar color="teal" src={team.avatarUrl}>
+            {team.name.slice(0, 2)}
+          </Avatar>
+          <Text>{team.name}</Text>
         </Group>
       </div>
       <AdminTabs activeTab={tab} />
@@ -46,46 +56,20 @@ async function AdminPage({
               <Text c="dimmed">Select the team you want to see</Text>
             </div>
             <div className="flex flex-col gap-4">
-              <form className="flex flex-col gap-4">
-                <PhotoInput />
-                <TextInput
-                  label="Team Name"
-                  placeholder="Team Name"
-                  name="teamName"
-                />
-                <TextInput
-                  label="Slug"
-                  description="This is the appointment booking page url"
-                  placeholder="slug"
-                  name="teamSlug"
-                />
-                <TextInput
-                  label="Location"
-                  placeholder="Location"
-                  name="location"
-                />
-                <TextInput
-                  label="Contact Email"
-                  placeholder="Contact Email"
-                  name="contactEmail"
-                  type="email"
-                />
-                <TextInput
-                  label="Contact Phone"
-                  placeholder="Contact Phone"
-                  name="contactPhone"
-                  type="tel"
-                />
-                <TextInput
-                  label="Timezone"
-                  placeholder="Timezone"
-                  name="timezone"
-                  type="text"
-                />
-                <Group justify="flex-end">
-                  <Button type="submit">Save</Button>
-                </Group>
-              </form>
+              <TeamForm
+                mode="update"
+                initialValues={{
+                  name: team.name,
+                  slug: team.slug,
+                  category: team.category || "",
+                  bio: team.bio || "",
+                  location: team.location || "",
+                  contactEmail: team.contactEmail || "",
+                  contactPhone: team.contactPhone || "",
+                  timezone: team.timezone || "",
+                  avatarUrl: team.avatarUrl || "",
+                }}
+              />
             </div>
           </SimpleGrid>
           <Divider my="xl" />
@@ -94,12 +78,7 @@ async function AdminPage({
               <Text fw={500}>Business Hours</Text>
               <Text c="dimmed">This are the business hours for the team</Text>
             </div>
-            <form className="flex flex-col gap-4">
-              <BusinessHours businessHours={[]} />
-              <Group justify="flex-end">
-                <Button type="submit">Save</Button>
-              </Group>
-            </form>
+            <TeamBusinessHoursForm defaultBusinessHours={team.businessHours} />
           </SimpleGrid>
         </>
       )}
@@ -301,7 +280,7 @@ async function AdminPage({
                 data={[
                   { value: "minutes", label: "Minutes" },
                   { value: "hours", label: "Hours" },
-                  { value: "days", label: "Days" }
+                  { value: "days", label: "Days" },
                 ]}
                 name="minBookingNoticeUnit"
               />

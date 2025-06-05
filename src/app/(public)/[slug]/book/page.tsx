@@ -80,6 +80,7 @@ export default async function BookPage({
                     phone: "+1234567890",
                     createdAt: new Date(),
                     updatedAt: new Date(),
+                    currentSessionTeamId: "",
                   },
                 },
                 {
@@ -99,6 +100,7 @@ export default async function BookPage({
                     phone: "+1234567891",
                     createdAt: new Date(),
                     updatedAt: new Date(),
+                    currentSessionTeamId: "",
                   },
                 },
                 {
@@ -118,6 +120,7 @@ export default async function BookPage({
                     phone: "+1234567892",
                     createdAt: new Date(),
                     updatedAt: new Date(),
+                    currentSessionTeamId: "",
                   },
                 },
                 {
@@ -137,6 +140,7 @@ export default async function BookPage({
                     phone: "+1234567893",
                     createdAt: new Date(),
                     updatedAt: new Date(),
+                    currentSessionTeamId: "",
                   },
                 },
                 {
@@ -156,12 +160,14 @@ export default async function BookPage({
                     phone: "+1234567894",
                     createdAt: new Date(),
                     updatedAt: new Date(),
+                    currentSessionTeamId: "",
                   },
                 },
               ]}
             />
           </Flex>
           <div>
+            {/* TODOL the min date should be the next available slot. not the current date */}
             <DateInput
               label="Date"
               placeholder="Select a date"

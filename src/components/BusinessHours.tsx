@@ -4,6 +4,7 @@ import { BusinessHour } from "../../prisma/generated";
 import { useState, useEffect } from "react";
 import { Checkbox, Stack, Text, Group } from "@mantine/core";
 import { TimeInput } from "@mantine/dates";
+import { CreateManyBusinessHoursInput } from "@/lib/types";
 
 const DAYS_OF_WEEK = [
   "Sunday",
@@ -15,7 +16,13 @@ const DAYS_OF_WEEK = [
   "Saturday",
 ];
 
-function BusinessHours({ businessHours }: { businessHours: BusinessHour[] }) {
+function BusinessHours({
+  businessHours,
+  onBusinessHoursChange,
+}: {
+  businessHours: BusinessHour[];
+  onBusinessHoursChange: (businessHours: CreateManyBusinessHoursInput) => void;
+}) {
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [hours, setHours] = useState<
     Record<number, { openTime: string; closeTime: string }>
@@ -38,6 +45,16 @@ function BusinessHours({ businessHours }: { businessHours: BusinessHour[] }) {
     setSelectedDays(initialSelectedDays);
     setHours(initialHours);
   }, [businessHours]);
+
+  useEffect(() => {
+    onBusinessHoursChange(
+      Object.entries(hours).map(([dayIndex, hour]) => ({
+        dayOfWeek: parseInt(dayIndex),
+        openTime: hour.openTime,
+        closeTime: hour.closeTime,
+      }))
+    );
+  }, [hours, onBusinessHoursChange]);
 
   const handleDayToggle = (dayIndex: number) => {
     setSelectedDays((prev) => {
