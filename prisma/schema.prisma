@@ -133,6 +133,7 @@ model Service {
   price        Float?  @default(0)
   currencyCode String? @default("USD")
   category     String?
+  isActive     Boolean @default(true)
 
   team         Team          @relation(fields: [teamId], references: [id])
   teamMembers  TeamMember[]  @relation("EmployeeServices")

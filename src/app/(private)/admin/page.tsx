@@ -1,4 +1,7 @@
 import { getUserCurrentSessionTeam } from "@/actions/team";
+import AdminInvitesList from "@/components/AdminInvitesList";
+import AdminServicesList from "@/components/AdminServicesList";
+import SendInviteDrawer from "@/components/SendInviteDrawer";
 import TeamBusinessHoursForm from "@/components/TeamBusinessHoursForm";
 import TeamForm from "@/components/TeamForm";
 import TeamMemberCard from "@/components/TeamMemberCard";
@@ -6,7 +9,6 @@ import { tryCatch } from "@/lib/try-catch";
 import {
   Avatar,
   Button,
-  Card,
   Container,
   Divider,
   Group,
@@ -18,12 +20,11 @@ import {
   Textarea,
 } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
-import { redirect } from "next/navigation";
-import AdminTabs from "./AdminTabs";
-import SendInviteDrawer from "@/components/SendInviteDrawer";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import AdminInvitesList from "@/components/AdminInvitesList";
+import AdminTabs from "./AdminTabs";
+import CreateServiceDrawer from "@/components/CreateServiceDrawer";
 
 async function AdminPage({
   searchParams,
@@ -140,62 +141,18 @@ async function AdminPage({
             <div>
               <Text fw={500}>Services</Text>
               <Text c="dimmed">Manage services available for the team</Text>
-              <Button
-                variant="default"
-                mt="md"
-                rightSection={<IconChevronRight size={14} />}
-              >
-                Add service
-              </Button>
+              <CreateServiceDrawer team={team} />
             </div>
-            <div className="flex flex-col gap-4">
-              <Card withBorder className="flex flex-col gap-2">
-                <Text fw={500}>Haircut</Text>
-                <Text size="sm" c="dimmed">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                  Possimus, tempore.
-                </Text>
-                <Group>
-                  <div className="w-1/3">
-                    <Text size="sm">Duration</Text>
-                    <Text size="sm" c="dimmed">
-                      30 minutes
-                    </Text>
-                  </div>
-                  <div className="w-1/3">
-                    <Text size="sm">Buffer</Text>
-                    <Text size="sm" c="dimmed">
-                      10 minutes
-                    </Text>
-                  </div>
+            <Suspense
+              fallback={
+                <Group justify="center">
+                  <Loader size="sm" />
+                  <Text>Loading services...</Text>
                 </Group>
-                <Group>
-                  <div className="w-1/3">
-                    <Text size="sm">Price</Text>
-                    <Text size="sm" c="dimmed">
-                      10 USD
-                    </Text>
-                  </div>
-                  <div className="w-1/3">
-                    <Text size="sm">Category</Text>
-                    <Text size="sm" c="dimmed">
-                      Essentials
-                    </Text>
-                  </div>
-                </Group>
-                <Group>
-                  <div className="w-1/3">
-                    <Text size="sm">Members assigned</Text>
-                    <Text size="sm" c="dimmed">
-                      10 members
-                    </Text>
-                  </div>
-                </Group>
-                <Group justify="flex-end">
-                  <Button variant="default">Edit</Button>
-                </Group>
-              </Card>
-            </div>
+              }
+            >
+              <AdminServicesList />
+            </Suspense>
           </SimpleGrid>
         </>
       )}

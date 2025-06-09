@@ -13,6 +13,11 @@ async function AdminInvitesList() {
 
   return (
     <div className="flex flex-col gap-4">
+      {invites?.length === 0 && (
+        <Text size="sm" c="dimmed">
+          No invites found
+        </Text>
+      )}
       {invites?.map((invite) => (
         <Card key={invite.id} withBorder className="flex flex-col gap-2">
           <Text>{invite.user?.name ?? "User"}</Text>

@@ -88,12 +88,7 @@ export async function getUserCurrentSessionTeam() {
     include: {
       members: {
         include: {
-          user: {
-            select: {
-              name: true,
-              avatarUrl: true,
-            },
-          },
+          user: true,
           availability: true,
           blockOffs: true,
           _count: {
@@ -109,6 +104,11 @@ export async function getUserCurrentSessionTeam() {
       businessHours: true,
     },
   });
+
+  team?.members.forEach((member) => {
+    member.user.password = "";
+  });
+
   if (!team) {
     throw new Error("No current session team");
   }
@@ -338,7 +338,7 @@ export async function loadTeamInvites() {
         },
       },
       orderBy: {
-        expiresAt: 'asc',
+        expiresAt: "asc",
       },
     })
   );
@@ -441,4 +441,43 @@ export async function updateTeamInviteRole(inviteId: string, role: TeamRole) {
 
   revalidatePath("/admin");
   return { data: invite, error: null };
+}
+
+export async function loadTeamServices() {
+  const { data: user, error: getCurrentUserError } = await tryCatch(
+    getCurrentUser()
+  );
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+  if (!user.currentSessionTeamId) {
+    return { data: null, error: "No current session team" };
+  }
+
+  const { data: services, error: servicesError } = await tryCatch(
+    prisma.service.findMany({
+      where: { teamId: user.currentSessionTeamId },
+      include: {
+        teamMembers: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        name: "asc",
+      },
+    })
+  );
+
+  if (servicesError) {
+    return { data: null, error: "Failed to fetch team services" };
+  }
+
+  return { data: services, error: null };
 }
