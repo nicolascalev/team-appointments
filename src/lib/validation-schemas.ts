@@ -28,5 +28,6 @@ export const createServiceSchema = z.object({
   price: z.number().min(0, "Price must be 0 or greater"),
   currencyCode: z.string().min(3, "Currency code must be 3 characters"),
   category: z.string().optional(),
+  teamMembers: z.array(z.string()).default([]),
   isActive: z.boolean().default(true),
 });

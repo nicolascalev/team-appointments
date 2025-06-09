@@ -41,6 +41,7 @@ function CreateServiceDrawer({ trigger, team }: CreateServiceDrawerProps) {
       price: 0,
       currencyCode: "USD",
       isActive: true,
+      teamMembers: [] as string[],
     },
     validate: zodResolver(createServiceSchema),
   });
@@ -48,6 +49,7 @@ function CreateServiceDrawer({ trigger, team }: CreateServiceDrawerProps) {
   const handleSubmit = async (values: typeof form.values) => {
     try {
       setLoading(true);
+      console.log({values});
       const { error } = await tryCatch(
         createService({
           ...values,
@@ -85,7 +87,6 @@ function CreateServiceDrawer({ trigger, team }: CreateServiceDrawerProps) {
   const schedulableMembers = team.members.filter(
     (member) => member.isSchedulable
   );
-  console.log(team.members);
 
   const defaultTrigger = (
     <Button
@@ -174,6 +175,12 @@ function CreateServiceDrawer({ trigger, team }: CreateServiceDrawerProps) {
                 <MembersToggle
                   members={schedulableMembers}
                   defaultSelectedMembers={schedulableMembers}
+                  onChange={(members) => {
+                    form.setFieldValue(
+                      "teamMembers",
+                      members.map((member) => member.id)
+                    );
+                  }}
                 />
               )}
             </div>

@@ -7,7 +7,11 @@ import { createServiceSchema } from "@/lib/validation-schemas";
 import { revalidatePath } from "next/cache";
 import { TeamRole, type Prisma } from "../../prisma/generated";
 
-export async function createService(data: Omit<Prisma.ServiceCreateInput, "team">) {
+type CreateServiceData = Omit<Prisma.ServiceCreateInput, "team"> & {
+  teamMembers: string[];
+};
+
+export async function createService(formData: CreateServiceData) {
   const { data: user, error: getCurrentUserError } = await tryCatch(
     getCurrentUser()
   );
@@ -37,7 +41,7 @@ export async function createService(data: Omit<Prisma.ServiceCreateInput, "team"
   }
 
   // Validate input
-  const validatedData = createServiceSchema.parse(data);
+  const validatedData = createServiceSchema.parse(formData);
 
   const { data: service, error: createServiceError } = await tryCatch(
     prisma.service.create({
@@ -48,6 +52,14 @@ export async function createService(data: Omit<Prisma.ServiceCreateInput, "team"
             id: user.currentSessionTeamId,
           },
         },
+        teamMembers: {
+          connect: validatedData.teamMembers.map((memberId) => ({
+            id: memberId,
+          })),
+        },
+      },
+      include: {
+        teamMembers: true,
       },
     })
   );
@@ -59,3 +71,4 @@ export async function createService(data: Omit<Prisma.ServiceCreateInput, "team"
   await revalidatePath("/admin");
   return { data: service, error: null };
 }
+

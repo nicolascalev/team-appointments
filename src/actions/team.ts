@@ -460,12 +460,7 @@ export async function loadTeamServices() {
       include: {
         teamMembers: {
           include: {
-            user: {
-              select: {
-                name: true,
-                avatarUrl: true,
-              },
-            },
+            user: true,
           },
         },
       },
@@ -474,6 +469,12 @@ export async function loadTeamServices() {
       },
     })
   );
+
+  services?.forEach((service) => {
+    service.teamMembers.forEach((member) => {
+      member.user.password = "";
+    });
+  });
 
   if (servicesError) {
     return { data: null, error: "Failed to fetch team services" };

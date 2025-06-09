@@ -2,15 +2,17 @@
 
 import { Avatar, Text, Flex, Group, Box } from "@mantine/core";
 import { TeamMemberWithUser } from "@/lib/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IconCheck } from "@tabler/icons-react";
 
 function MembersToggle({
   members,
   defaultSelectedMembers,
+  onChange,
 }: {
   members: TeamMemberWithUser[];
   defaultSelectedMembers?: TeamMemberWithUser[];
+  onChange?: (members: TeamMemberWithUser[]) => void;
 }) {
   const [selectedMembers, setSelectedMembers] = useState<TeamMemberWithUser[]>(
     defaultSelectedMembers || []
@@ -26,6 +28,11 @@ function MembersToggle({
       }
     });
   };
+
+  useEffect(() => {
+    onChange?.(selectedMembers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMembers]);
 
   return (
     <Group>
