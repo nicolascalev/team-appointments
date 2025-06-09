@@ -10,3 +10,21 @@ export type CreateManyBusinessHoursInput = Omit<
   Prisma.BusinessHourCreateManyInput,
   "teamId"
 >[];
+
+export type TeamMemberCard = Prisma.TeamMemberGetPayload<{
+  include: {
+    user: {
+      select: {
+        name: true;
+        avatarUrl: true;
+      };
+    };
+    availability: true;
+    blockOffs: true;
+    _count: {
+      select: {
+        services: true;
+      };
+    };
+  };
+}>;

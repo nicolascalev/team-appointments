@@ -1,16 +1,16 @@
 import { getUserCurrentSessionTeam } from "@/actions/team";
-import LabelWithInfo from "@/components/LabelWithInfo";
 import TeamBusinessHoursForm from "@/components/TeamBusinessHoursForm";
 import TeamForm from "@/components/TeamForm";
+import TeamMemberCard from "@/components/TeamMemberCard";
 import { tryCatch } from "@/lib/try-catch";
 import {
   Avatar,
-  Box,
   Button,
   Card,
   Container,
   Divider,
   Group,
+  Loader,
   NumberInput,
   Select,
   SimpleGrid,
@@ -20,6 +20,10 @@ import {
 import { IconChevronRight } from "@tabler/icons-react";
 import { redirect } from "next/navigation";
 import AdminTabs from "./AdminTabs";
+import SendInviteDrawer from "@/components/SendInviteDrawer";
+import { revalidatePath } from "next/cache";
+import { Suspense } from "react";
+import AdminInvitesList from "@/components/AdminInvitesList";
 
 async function AdminPage({
   searchParams,
@@ -37,9 +41,6 @@ async function AdminPage({
   return (
     <Container size="md" p={0}>
       <div>
-        <Text fw={500} mt="xl" size="lg">
-          Admin
-        </Text>
         <Group mb="xl" mt="md">
           <Avatar color="teal" src={team.avatarUrl}>
             {team.name.slice(0, 2)}
@@ -99,69 +100,13 @@ async function AdminPage({
               </Button>
             </div>
             <div className="flex flex-col gap-4">
-              <Card withBorder>
-                <Group justify="space-between">
-                  <div>
-                    <Text>Roberto Valverde</Text>
-                    <Text c="dimmed">Full-time barber</Text>
-                  </div>
-                  <Avatar>R</Avatar>
-                </Group>
-                <Group mt="md" wrap="nowrap">
-                  <div className="w-1/3">
-                    <LabelWithInfo
-                      label="Active"
-                      info="You can use this to quickly disable a user from taking appointments"
-                    />
-                    <Text size="sm" c="dimmed">
-                      Yes
-                    </Text>
-                  </div>
-                  <div className="w-1/3">
-                    <LabelWithInfo
-                      label="Schedulable"
-                      info="Schedulable means that the user is an employee available to take appointments, not just a team member"
-                    />
-                    <Text size="sm" c="dimmed">
-                      Yes
-                    </Text>
-                  </div>
-                </Group>
-                <Box mt="md">
-                  <Text size="sm" fw={500}>
-                    Schedule
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    Monday: 10:00 - 18:00
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    Tuesday: 10:00 - 18:00
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    Wednesday: 10:00 - 18:00
-                  </Text>
-                </Box>
-                <Box mt="md">
-                  <LabelWithInfo
-                    label="Block offs"
-                    info="Upcoming blocks of time off for the employee"
-                  />
-                  <Text size="sm" c="dimmed">
-                    February 10th, 2025: 10:00 - 18:00
-                  </Text>
-                </Box>
-                <Box mt="md">
-                  <Text size="sm" fw={500}>
-                    Assigned services
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    5 services assigned
-                  </Text>
-                </Box>
-                <Group justify="flex-end" mt="md">
-                  <Button variant="default">Edit</Button>
-                </Group>
-              </Card>
+              {team.members.length > 0 ? (
+                team.members.map((member) => (
+                  <TeamMemberCard key={member.id} member={member} />
+                ))
+              ) : (
+                <Text c="dimmed">No members yet</Text>
+              )}
             </div>
           </SimpleGrid>
           <Divider my="xl" />
@@ -169,28 +114,23 @@ async function AdminPage({
             <div>
               <Text fw={500}>Invites</Text>
               <Text c="dimmed">Manage invites for the team</Text>
-              <Button
-                variant="default"
-                mt="md"
-                rightSection={<IconChevronRight size={14} />}
-              >
-                Send invite
-              </Button>
+              <SendInviteDrawer
+                onSuccess={async () => {
+                  "use server";
+                  await revalidatePath("/admin");
+                }}
+              />
             </div>
-            <div className="flex flex-col gap-4">
-              <Card withBorder className="flex flex-col gap-2">
-                <Text>User</Text>
-                <Text size="sm" c="dimmed">
-                  text@example.com has been invited as an admin
-                </Text>
-                <Text size="sm" c="dimmed">
-                  Expires in 1 day
-                </Text>
-                <Group justify="flex-end" mt="md">
-                  <Button variant="default">Cancel</Button>
+            <Suspense
+              fallback={
+                <Group justify="center">
+                  <Loader size="sm" />
+                  <Text>Loading invites...</Text>
                 </Group>
-              </Card>
-            </div>
+              }
+            >
+              <AdminInvitesList />
+            </Suspense>
           </SimpleGrid>
         </>
       )}

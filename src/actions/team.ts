@@ -3,11 +3,11 @@
 import { getCurrentUser } from "@/actions/auth";
 import { uploadFiles } from "@/lib/file-uploads";
 import { prisma } from "@/lib/prisma";
-import { createTeamSchema } from "@/lib/validation-schemas";
-import { revalidatePath } from "next/cache";
-import type { Prisma } from "../../prisma/generated";
 import { tryCatch } from "@/lib/try-catch";
 import { CreateManyBusinessHoursInput } from "@/lib/types";
+import { createTeamSchema } from "@/lib/validation-schemas";
+import { revalidatePath } from "next/cache";
+import { TeamRole, type Prisma } from "../../prisma/generated";
 
 export async function createTeam(
   data: Prisma.TeamCreateInput & { avatar?: File }
@@ -86,7 +86,23 @@ export async function getUserCurrentSessionTeam() {
   const team = await prisma.team.findUnique({
     where: { id: user.currentSessionTeamId },
     include: {
-      members: true,
+      members: {
+        include: {
+          user: {
+            select: {
+              name: true,
+              avatarUrl: true,
+            },
+          },
+          availability: true,
+          blockOffs: true,
+          _count: {
+            select: {
+              services: true,
+            },
+          },
+        },
+      },
       services: true,
       appointments: true,
       settings: true,
@@ -157,7 +173,7 @@ export async function updateTeamBusinessHours(
 
   const { error: deleteError } = await tryCatch(
     prisma.businessHour.deleteMany({
-      where: { teamId: user.currentSessionTeamId }
+      where: { teamId: user.currentSessionTeamId },
     })
   );
 
@@ -177,4 +193,252 @@ export async function updateTeamBusinessHours(
 
   revalidatePath("/admin");
   return { data: businessHours, error: null };
+}
+
+export async function sendTeamInvites(emails: string[]): Promise<{
+  data: number | null;
+  error: string | null;
+}> {
+  const { data: user, error: getCurrentUserError } = await tryCatch(
+    getCurrentUser()
+  );
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+  if (!user.currentSessionTeamId) {
+    return { data: null, error: "No current session team" };
+  }
+
+  // Check if the user is an admin in the team
+  const { data: teamMember, error: teamMemberError } = await tryCatch(
+    prisma.teamMember.findUnique({
+      where: {
+        userId_teamId: {
+          userId: user.id,
+          teamId: user.currentSessionTeamId,
+        },
+        role: TeamRole.ADMIN,
+      },
+    })
+  );
+
+  if (teamMemberError || !teamMember) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  // Get existing team members to check for duplicates
+  const { data: existingMembers, error: membersError } = await tryCatch(
+    prisma.teamMember.findMany({
+      where: { teamId: user.currentSessionTeamId },
+      include: { user: true },
+    })
+  );
+
+  if (membersError) {
+    return { data: null, error: "Failed to fetch team members" };
+  }
+
+  // Get existing invites to avoid duplicates
+  const { data: existingInvites, error: invitesError } = await tryCatch(
+    prisma.invite.findMany({
+      where: { teamId: user.currentSessionTeamId },
+    })
+  );
+
+  if (invitesError) {
+    return { data: null, error: "Failed to fetch existing invites" };
+  }
+
+  // Filter out emails that are already members or have pending invites
+  const existingEmails = new Set([
+    ...existingMembers.map((member) => member.user.email),
+    ...existingInvites.map((invite) => invite.email),
+  ]);
+
+  const validEmails = emails.filter((email) => !existingEmails.has(email));
+
+  if (validEmails.length === 0) {
+    return { data: null, error: "No valid emails to invite" };
+  }
+
+  // Get users by email to link invites to existing users
+  const { data: existingUsers, error: usersError } = await tryCatch(
+    prisma.user.findMany({
+      where: { email: { in: validEmails } },
+    })
+  );
+
+  if (usersError) {
+    return { data: null, error: "Failed to fetch existing users" };
+  }
+
+  const userMap = new Map(existingUsers.map((user) => [user.email, user]));
+
+  // Create invites
+  const invites = validEmails.map((email) => ({
+    email,
+    teamId: user.currentSessionTeamId as string,
+    role: "MEMBER" as const,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+    userId: userMap.get(email)?.id,
+  }));
+
+  const { data: createdInvites, error: createError } = await tryCatch(
+    prisma.invite.createMany({
+      data: invites,
+    })
+  );
+
+  if (createError) {
+    return { data: null, error: "Failed to create invites" };
+  }
+
+  revalidatePath("/admin");
+  return { data: createdInvites?.count, error: null };
+}
+
+export async function loadTeamInvites() {
+  const { data: user, error: getCurrentUserError } = await tryCatch(
+    getCurrentUser()
+  );
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+  if (!user.currentSessionTeamId) {
+    return { data: null, error: "No current session team" };
+  }
+
+  // Check if the user is an admin in the team
+  const { data: teamMember, error: teamMemberError } = await tryCatch(
+    prisma.teamMember.findUnique({
+      where: {
+        userId_teamId: {
+          userId: user.id,
+          teamId: user.currentSessionTeamId,
+        },
+        role: TeamRole.ADMIN,
+      },
+    })
+  );
+
+  if (teamMemberError || !teamMember) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  const { data: invites, error: invitesError } = await tryCatch(
+    prisma.invite.findMany({
+      where: { teamId: user.currentSessionTeamId },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        expiresAt: 'asc',
+      },
+    })
+  );
+
+  if (invitesError) {
+    return { data: null, error: "Failed to fetch team invites" };
+  }
+
+  return { data: invites, error: null };
+}
+
+export async function cancelTeamInvite(inviteId: string) {
+  const { data: user, error: getCurrentUserError } = await tryCatch(
+    getCurrentUser()
+  );
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+  if (!user.currentSessionTeamId) {
+    return { data: null, error: "No current session team" };
+  }
+
+  // Check if the user is an admin in the team
+  const { data: teamMember, error: teamMemberError } = await tryCatch(
+    prisma.teamMember.findUnique({
+      where: {
+        userId_teamId: {
+          userId: user.id,
+          teamId: user.currentSessionTeamId,
+        },
+        role: TeamRole.ADMIN,
+      },
+    })
+  );
+
+  if (teamMemberError || !teamMember) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  const { data: invite, error: deleteError } = await tryCatch(
+    prisma.invite.delete({
+      where: {
+        id: inviteId,
+        teamId: user.currentSessionTeamId,
+      },
+    })
+  );
+
+  if (deleteError) {
+    return { data: null, error: "Failed to cancel invite" };
+  }
+
+  revalidatePath("/admin");
+  return { data: invite, error: null };
+}
+
+export async function updateTeamInviteRole(inviteId: string, role: TeamRole) {
+  const { data: user, error: getCurrentUserError } = await tryCatch(
+    getCurrentUser()
+  );
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+  if (!user.currentSessionTeamId) {
+    return { data: null, error: "No current session team" };
+  }
+
+  // Check if the user is an admin in the team
+  const { data: teamMember, error: teamMemberError } = await tryCatch(
+    prisma.teamMember.findUnique({
+      where: {
+        userId_teamId: {
+          userId: user.id,
+          teamId: user.currentSessionTeamId,
+        },
+        role: TeamRole.ADMIN,
+      },
+    })
+  );
+
+  if (teamMemberError || !teamMember) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  const { data: invite, error: updateError } = await tryCatch(
+    prisma.invite.update({
+      where: {
+        id: inviteId,
+        teamId: user.currentSessionTeamId,
+      },
+      data: {
+        role,
+      },
+    })
+  );
+
+  if (updateError) {
+    return { data: null, error: "Failed to update invite role" };
+  }
+
+  revalidatePath("/admin");
+  return { data: invite, error: null };
 }

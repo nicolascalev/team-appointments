@@ -21,6 +21,7 @@ model User {
   updatedAt            DateTime @updatedAt
   currentSessionTeamId String?
   currentSessionTeam   Team?    @relation("UserCurrentSessionTeam", fields: [currentSessionTeamId], references: [id])
+  avatarUrl            String?
 
   memberOf     TeamMember[]  @relation("UserMemberOf")
   appointments Appointment[]
@@ -30,18 +31,18 @@ model User {
 }
 
 model Team {
-  id           String   @id @default(uuid())
-  category     String?
-  bio          String?
-  name         String
-  slug         String   @unique
-  location     String?
-  contactEmail String?
-  contactPhone String?
-  timezone     String
-  avatarUrl    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                  String         @id @default(uuid())
+  category            String?
+  bio                 String?
+  name                String
+  slug                String         @unique
+  location            String?
+  contactEmail        String?
+  contactPhone        String?
+  timezone            String
+  avatarUrl           String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
   members             TeamMember[]
   services            Service[]
   appointments        Appointment[]
@@ -88,7 +89,7 @@ model Invite {
   email     String
   teamId    String
   role      TeamRole @default(MEMBER)
-  token     String   @unique
+  token     String   @unique @default(uuid())
   expiresAt DateTime
   userId    String?
 
