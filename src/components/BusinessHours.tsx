@@ -19,9 +19,11 @@ const DAYS_OF_WEEK = [
 function BusinessHours({
   businessHours,
   onBusinessHoursChange,
+  label,
 }: {
   businessHours: BusinessHour[];
   onBusinessHoursChange: (businessHours: CreateManyBusinessHoursInput) => void;
+  label?: React.ReactNode;
 }) {
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [hours, setHours] = useState<
@@ -87,9 +89,11 @@ function BusinessHours({
   return (
     <Stack gap="lg">
       <div>
-        <Text fw={500} mb="md">
-          Days open
-        </Text>
+        {label ? label : (
+          <Text fw={500} mb="md">
+            Days open
+          </Text>
+        )}
         <Group>
           {DAYS_OF_WEEK.map((day, index) => (
             <Checkbox

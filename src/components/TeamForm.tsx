@@ -8,6 +8,7 @@ import {
   Stack,
   Popover,
   Text,
+  Group,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications, showNotification } from "@mantine/notifications";
@@ -195,9 +196,11 @@ export default function TeamForm({
           {...form.getInputProps("timezone")}
         />
 
-        <Button type="submit" loading={loading}>
-          {mode === "create" ? "Create Team" : "Update Team"}
-        </Button>
+        <Group justify="flex-end">
+          <Button type="submit" loading={loading} w={{ base: "100%", sm: "auto" }}>
+            {mode === "create" ? "Create Team" : "Update Team"}
+          </Button>
+        </Group>
       </Stack>
     </form>
   );

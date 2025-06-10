@@ -1,6 +1,7 @@
 import { TeamMemberCard as TeamMemberCardType } from "@/lib/types";
-import { Avatar, Box, Button, Card, Group, Text } from "@mantine/core";
+import { Avatar, Box, Card, Group, Text } from "@mantine/core";
 import LabelWithInfo from "./LabelWithInfo";
+import EditTeamMemberModal from "./EditTeamMemberModal";
 
 function TeamMemberCard({ member }: { member: TeamMemberCardType }) {
   return (
@@ -98,7 +99,7 @@ function TeamMemberCard({ member }: { member: TeamMemberCardType }) {
         </Text>
       </Box>
       <Group justify="flex-end" mt="md">
-        <Button variant="default">Edit</Button>
+        <EditTeamMemberModal teamMemberId={member.id} />
       </Group>
     </Card>
   );
