@@ -11,6 +11,10 @@ type CreateServiceData = Omit<Prisma.ServiceCreateInput, "team"> & {
   teamMembers: string[];
 };
 
+type UpdateServiceData = CreateServiceData & {
+  id: string;
+};
+
 export async function createService(formData: CreateServiceData) {
   const { data: user, error: getCurrentUserError } = await tryCatch(
     getCurrentUser()
@@ -66,6 +70,66 @@ export async function createService(formData: CreateServiceData) {
 
   if (createServiceError || !service) {
     return { data: null, error: "Failed to create service" };
+  }
+
+  await revalidatePath("/admin");
+  return { data: service, error: null };
+}
+
+export async function updateService(formData: UpdateServiceData) {
+  const { data: user, error: getCurrentUserError } = await tryCatch(
+    getCurrentUser()
+  );
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  if (!user.currentSessionTeamId) {
+    return { data: null, error: "No current session team" };
+  }
+
+  // Check if the user is an admin in the team
+  const { data: teamMember, error: teamMemberError } = await tryCatch(
+    prisma.teamMember.findUnique({
+      where: {
+        userId_teamId: {
+          userId: user.id,
+          teamId: user.currentSessionTeamId,
+        },
+        role: TeamRole.ADMIN,
+      },
+    })
+  );
+
+  if (teamMemberError || !teamMember) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  // Validate input
+  const validatedData = createServiceSchema.parse(formData);
+
+  const { data: service, error: updateServiceError } = await tryCatch(
+    prisma.service.update({
+      where: {
+        id: formData.id,
+        teamId: user.currentSessionTeamId,
+      },
+      data: {
+        ...validatedData,
+        teamMembers: {
+          set: validatedData.teamMembers.map((memberId) => ({
+            id: memberId,
+          })),
+        },
+      },
+      include: {
+        teamMembers: true,
+      },
+    })
+  );
+
+  if (updateServiceError || !service) {
+    return { data: null, error: "Failed to update service" };
   }
 
   await revalidatePath("/admin");

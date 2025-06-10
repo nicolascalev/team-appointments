@@ -1,7 +1,7 @@
 "use client";
 
-import { createService } from "@/actions/service";
-import { TeamAdminPage } from "@/lib/types";
+import { updateService } from "@/actions/service";
+import { TeamAdminPage, TeamService } from "@/lib/types";
 import { Button, Drawer } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconChevronRight } from "@tabler/icons-react";
@@ -13,15 +13,17 @@ import { createServiceSchema } from "@/lib/validation-schemas";
 
 type ServiceFormValues = z.infer<typeof createServiceSchema>;
 
-interface CreateServiceDrawerProps {
+interface UpdateServiceDrawerProps {
   trigger?: React.ReactNode;
   team: TeamAdminPage;
+  service: TeamService;
 }
 
-export default function CreateServiceDrawer({
+export default function UpdateServiceDrawer({
   trigger,
   team,
-}: CreateServiceDrawerProps) {
+  service,
+}: UpdateServiceDrawerProps) {
   const [opened, setOpened] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -29,15 +31,16 @@ export default function CreateServiceDrawer({
     try {
       setLoading(true);
       const { error } = await tryCatch(
-        createService({
+        updateService({
           ...values,
+          id: service.id,
         })
       );
 
       if (error) {
         notifications.show({
           title: "Error",
-          message: error.message || "Failed to create service",
+          message: error.message || "Failed to update service",
           color: "red",
         });
         return;
@@ -45,15 +48,15 @@ export default function CreateServiceDrawer({
 
       notifications.show({
         title: "Success",
-        message: "Service created successfully",
+        message: "Service updated successfully",
         color: "green",
       });
       setOpened(false);
     } catch (error: unknown) {
-      console.error("Failed to create service:", error);
+      console.error("Failed to update service:", error);
       notifications.show({
         title: "Error",
-        message: "Failed to create service",
+        message: "Failed to update service",
         color: "red",
       });
     } finally {
@@ -64,11 +67,10 @@ export default function CreateServiceDrawer({
   const defaultTrigger = (
     <Button
       variant="default"
-      mt="md"
       rightSection={<IconChevronRight size={14} />}
       onClick={() => setOpened(true)}
     >
-      Add service
+      Edit
     </Button>
   );
 
@@ -83,17 +85,18 @@ export default function CreateServiceDrawer({
       <Drawer
         opened={opened}
         onClose={() => setOpened(false)}
-        title="Create Service"
+        title="Update Service"
         position="right"
         size="md"
       >
         <ServiceForm
           onSubmit={handleSubmit}
+          defaultValues={service}
           team={team}
-          submitLabel="Create"
+          submitLabel="Update"
           loading={loading}
         />
       </Drawer>
     </>
   );
-}
+} 

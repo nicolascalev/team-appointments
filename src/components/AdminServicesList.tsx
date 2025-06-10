@@ -1,7 +1,13 @@
-import { Card, Text, Group, Button } from "@mantine/core";
+import { Card, Text, Group } from "@mantine/core";
 import { loadTeamServices } from "@/actions/team";
+import UpdateServiceDrawer from "./UpdateServiceDrawer";
+import { TeamAdminPage } from "@/lib/types";
 
-async function AdminServicesList() {
+interface AdminServicesListProps {
+  team: TeamAdminPage;
+}
+
+async function AdminServicesList({ team }: AdminServicesListProps) {
   const { data: services, error } = await loadTeamServices();
 
   if (error) {
@@ -64,7 +70,7 @@ async function AdminServicesList() {
             </div>
           </Group>
           <Group justify="flex-end">
-            <Button variant="default">Edit</Button>
+            <UpdateServiceDrawer team={team} service={service} />
           </Group>
         </Card>
       ))}

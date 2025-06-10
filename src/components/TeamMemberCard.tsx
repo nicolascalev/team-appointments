@@ -89,6 +89,14 @@ function TeamMemberCard({ member }: { member: TeamMemberCardType }) {
           </Text>
         )}
       </Box>
+      <Box mt="md">
+        <Text size="sm" fw={500}>
+          Role
+        </Text>
+        <Text size="sm" c="dimmed">
+          {member.role}
+        </Text>
+      </Box>
       <Group justify="flex-end" mt="md">
         <Button variant="default">Edit</Button>
       </Group>

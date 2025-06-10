@@ -23,7 +23,7 @@ async function AdminInvitesList() {
           <Text>{invite.user?.name ?? "User"}</Text>
           <Text size="sm" c="dimmed">
             {invite.email} has been invited as{" "}
-            <Badge variant="light" radius="xs">
+            <Badge variant="light" radius="xs" component="span">
               {invite.role}
             </Badge>
           </Text>

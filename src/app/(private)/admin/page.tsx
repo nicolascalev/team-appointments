@@ -151,7 +151,7 @@ async function AdminPage({
                 </Group>
               }
             >
-              <AdminServicesList />
+              <AdminServicesList team={team} />
             </Suspense>
           </SimpleGrid>
         </>
