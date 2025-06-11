@@ -38,7 +38,6 @@ export async function getTeamMember(teamMemberId: string) {
     return { data: null, error: teamMemberError };
   }
 
-  console.log(teamMember);
   return { data: teamMember, error: null };
 }
 

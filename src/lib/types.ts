@@ -29,6 +29,21 @@ export type TeamMemberCard = Prisma.TeamMemberGetPayload<{
   };
 }>;
 
+export type TeamMemberFull = Prisma.TeamMemberGetPayload<{
+  include: {
+    team: {
+      include: {
+        businessHours: true;
+        services: true;
+      };
+    };
+    blockOffs: true;
+    services: true;
+    user: true;
+    availability: true;
+  };
+}>;
+
 export type TeamService = Prisma.ServiceGetPayload<{
   include: {
     teamMembers: {
@@ -64,3 +79,11 @@ export type TeamAdminPage = Prisma.TeamGetPayload<{
     businessHours: true;
   };
 }>;
+
+export type AvailabilityInput = {
+  id?: string;
+  teamMemberId?: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+};
