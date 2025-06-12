@@ -3,9 +3,10 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: { memberId: string } }
+  { params }: { params: Promise<{ memberId: string }> }
 ) {
-  const { data, error } = await getTeamMember(params.memberId);
+  const { memberId } = await params;
+  const { data, error } = await getTeamMember(memberId);
 
   if (error) {
     return NextResponse.json({ error }, { status: 400 });

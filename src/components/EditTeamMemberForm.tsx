@@ -1,5 +1,5 @@
 "use client";
-import { AvailabilityInput, TeamMemberFull } from "@/lib/types";
+import { AvailabilityInput, BlockOff, TeamMemberFull } from "@/lib/types";
 import { useMember } from "@/lib/useMember";
 import {
   Avatar,
@@ -15,10 +15,14 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
-import { Service, TeamRole, EmployeeBlockOff } from "../../prisma/generated";
+import { Service, TeamRole } from "../../prisma/generated";
 import Availability from "./Availability";
+import BlockOffsForm from "./BlockOffsForm";
+import { updateTeamMember } from "@/actions/member";
+import { tryCatch } from "@/lib/try-catch";
+import { showNotification } from "@mantine/notifications";
+import { formatDateLong } from "@/lib/utils";
 
 function EditTeamMemberForm({
   closeModal,
@@ -27,7 +31,8 @@ function EditTeamMemberForm({
   closeModal: () => void;
   teamMemberId: string;
 }) {
-  const { member, memberLoading, memberError } = useMember(teamMemberId);
+  const { member, memberLoading, memberError, revalidateMember } =
+    useMember(teamMemberId);
 
   if (memberLoading) {
     return (
@@ -46,7 +51,13 @@ function EditTeamMemberForm({
     return <div>No member found</div>;
   }
 
-  return <EditTeamMemberFormContent member={member} closeModal={closeModal} />;
+  return (
+    <EditTeamMemberFormContent
+      member={member}
+      closeModal={closeModal}
+      revalidateMember={revalidateMember}
+    />
+  );
 }
 
 export default EditTeamMemberForm;
@@ -54,9 +65,11 @@ export default EditTeamMemberForm;
 function EditTeamMemberFormContent({
   member,
   closeModal,
+  revalidateMember,
 }: {
   member: TeamMemberFull;
   closeModal: () => void;
+  revalidateMember: () => void;
 }) {
   const [active, setActive] = useState(member.isActive ? "active" : "inactive");
   const [role, setRole] = useState(member.role);
@@ -66,8 +79,54 @@ function EditTeamMemberFormContent({
   const [availability, setAvailability] = useState(
     member.availability as AvailabilityInput[]
   );
-  const [blockOffs, setBlockOffs] = useState(member.blockOffs as EmployeeBlockOff[]);
+  const [blockOffsData, setBlockOffsData] = useState<BlockOff[]>(
+    member.blockOffs.map((b) => ({
+      start: new Date(b.start).toISOString(),
+      end: new Date(b.end).toISOString(),
+      reason: b.reason || "",
+    }))
+  );
   const [services, setServices] = useState<Service[]>(member.services);
+
+  const [updateLoading, setUpdateLoading] = useState(false);
+
+  async function handleUpdate() {
+    setUpdateLoading(true);
+    const formData = {
+      isActive: active === "active",
+      role,
+      isSchedulable: isSchedulable === "yes",
+      availability,
+      blockOffs: [
+        ...blockOffsData,
+        ...member.blockOffs.map((b) => ({
+          start: new Date(b.start).toISOString(),
+          end: new Date(b.end).toISOString(),
+          reason: b.reason || "",
+        })),
+      ],
+      services: services,
+    };
+    const { data: updateData, error: updateError } = await tryCatch(
+      updateTeamMember(member.id, formData)
+    );
+    if (updateError || updateData?.error) {
+      showNotification({
+        title: "Error",
+        message:
+          updateError?.message || updateData?.error || "Something went wrong",
+        color: "red",
+      });
+    } else {
+      showNotification({
+        title: "Success",
+        message: "Team member updated successfully",
+        color: "green",
+      });
+      revalidateMember();
+      closeModal();
+    }
+  }
 
   return (
     <Container>
@@ -146,29 +205,22 @@ function EditTeamMemberFormContent({
           </Text>
         </div>
         <Stack>
-          {blockOffs.length === 0 && (
+          {member.blockOffs.length === 0 && (
             <Text size="sm" c="dimmed">
               No upcoming block offs
             </Text>
           )}
-          {blockOffs.map((blockOff) => (
+          {member.blockOffs.map((blockOff) => (
+            // TODO: Add a button to delete the block off
             <Card withBorder key={blockOff.id}>
               <Text size="sm">
-                From {new Date(blockOff.start).toLocaleDateString()} to{" "}
-                {new Date(blockOff.end).toLocaleDateString()}
+                From {formatDateLong(new Date(blockOff.start))} <br />
+                To {formatDateLong(new Date(blockOff.end))}
               </Text>
               <Text size="sm">Reason: {blockOff.reason}</Text>
             </Card>
           ))}
-          <div>
-            <Button
-              variant="default"
-              size="xs"
-              leftSection={<IconPlus size={14} />}
-            >
-              Add block off
-            </Button>
-          </div>
+          <BlockOffsForm onChange={setBlockOffsData} />
         </Stack>
       </SimpleGrid>
       <Divider my="xl" />
@@ -208,7 +260,9 @@ function EditTeamMemberFormContent({
         <Button variant="default" onClick={closeModal}>
           Cancel
         </Button>
-        <Button onClick={closeModal}>Save</Button>
+        <Button onClick={handleUpdate} loading={updateLoading}>
+          Save
+        </Button>
       </Group>
     </Container>
   );

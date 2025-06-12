@@ -87,3 +87,9 @@ export type AvailabilityInput = {
   startTime: string;
   endTime: string;
 };
+
+export type BlockOff = {
+  start: string;
+  end: string;
+  reason?: string;
+};

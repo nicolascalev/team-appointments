@@ -16,4 +16,16 @@ export function slugify(text: string): string {
     .replace(/\-\-+/g, '-')      // Replace multiple - with single -
     .replace(/^-+/, '')          // Trim - from start of text
     .replace(/-+$/, '');         // Trim - from end of text
-} 
+}
+
+export function formatDateLong(date: Date) {
+  return `${date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })} ${date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit', 
+    hour12: true
+  })}`;
+}

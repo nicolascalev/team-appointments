@@ -2,6 +2,7 @@ import { TeamMemberCard as TeamMemberCardType } from "@/lib/types";
 import { Avatar, Box, Card, Group, Text } from "@mantine/core";
 import LabelWithInfo from "./LabelWithInfo";
 import EditTeamMemberModal from "./EditTeamMemberModal";
+import { formatDateLong } from "@/lib/utils";
 
 function TeamMemberCard({ member }: { member: TeamMemberCardType }) {
   return (
@@ -40,14 +41,16 @@ function TeamMemberCard({ member }: { member: TeamMemberCardType }) {
           Schedule
         </Text>
         {member.availability.length > 0 ? (
-          <Text size="sm" c="dimmed">
+          <div>
             {member.availability.map((availability) => (
-              <Text key={availability.id}>
-                {availability.dayOfWeek}: {availability.startTime} -{" "}
-                {availability.endTime}
+              <Text key={availability.id} size="sm" c="dimmed">
+                {new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(
+                  new Date(2024, 0, availability.dayOfWeek)
+                )}
+                : {availability.startTime} - {availability.endTime}
               </Text>
             ))}
-          </Text>
+          </div>
         ) : (
           <Text size="sm" c="dimmed">
             No schedule available
@@ -60,16 +63,14 @@ function TeamMemberCard({ member }: { member: TeamMemberCardType }) {
           info="Upcoming blocks of time off for the employee"
         />
         {member.blockOffs.length > 0 ? (
-          <Text size="sm" c="dimmed">
+          <div>
             {member.blockOffs.map((blockOff) => (
-              <Text key={blockOff.id}>
-                {new Date(blockOff.start).toLocaleDateString()}{" "}
-                {new Date(blockOff.start).toLocaleTimeString()} -{" "}
-                {new Date(blockOff.end).toLocaleDateString()}{" "}
-                {new Date(blockOff.end).toLocaleTimeString()}
+              <Text key={blockOff.id} size="sm" c="dimmed">
+                {formatDateLong(new Date(blockOff.start))} -{" "}
+                {formatDateLong(new Date(blockOff.end))}
               </Text>
             ))}
-          </Text>
+          </div>
         ) : (
           <Text size="sm" c="dimmed">
             No block offs
