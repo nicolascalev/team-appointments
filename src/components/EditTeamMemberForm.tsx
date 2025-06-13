@@ -100,14 +100,7 @@ function EditTeamMemberFormContent({
       role,
       isSchedulable: isSchedulable === "yes",
       availability,
-      blockOffs: [
-        ...blockOffsData,
-        ...member.blockOffs.map((b) => ({
-          start: new Date(b.start).toISOString(),
-          end: new Date(b.end).toISOString(),
-          reason: b.reason || "",
-        })),
-      ],
+      blockOffs: [...blockOffsData],
       services: services,
     };
     const { data: updateData, error: updateError } = await tryCatch(
@@ -119,12 +112,14 @@ function EditTeamMemberFormContent({
         message:
           updateError?.message || updateData?.error || "Something went wrong",
         color: "red",
+        withCloseButton: true,
       });
     } else {
       showNotification({
         title: "Success",
         message: "Team member updated successfully",
         color: "green",
+        withCloseButton: true,
       });
       revalidateMember();
       closeModal();
@@ -336,12 +331,14 @@ function DeleteBlockOffButton({
                       deletedBlockOff?.error ||
                       "Something went wrong",
                     color: "red",
+                    withCloseButton: true,
                   });
                 } else {
                   showNotification({
                     title: "Success",
                     message: "Block off deleted successfully",
                     color: "green",
+                    withCloseButton: true,
                   });
                   revalidateMember();
                   setOpened(false);

@@ -122,9 +122,6 @@ export async function updateTeamMember(
         availability: {
           deleteMany: {},
         },
-        blockOffs: {
-          deleteMany: {},
-        },
         // Unlink all services
         services: {
           set: [],
