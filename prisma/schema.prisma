@@ -174,7 +174,10 @@ enum AppointmentStatus {
 model TeamSettings {
   id                         String  @id @default(uuid())
   teamId                     String  @unique
-  minBookingNoticeMinutes    Int     @default(60)
+  minBookingNoticeMinutes    Int     @default(5)
+  // I need to use minBookingNoticeAmount and minBookingNoticeUnit to calculate the minBookingNoticeMinutes because the calculations are always done in minutes
+  minBookingNoticeUnit       String  @default("minutes")
+  minBookingNoticeAmount     Int     @default(5)
   cancellationPolicy         String?
   maxAppointmentsPerDay      Int?
   maxAppointmentsPerEmployee Int?

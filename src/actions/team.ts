@@ -5,9 +5,10 @@ import { uploadFiles } from "@/lib/file-uploads";
 import { prisma } from "@/lib/prisma";
 import { tryCatch } from "@/lib/try-catch";
 import { CreateManyBusinessHoursInput } from "@/lib/types";
-import { createTeamSchema } from "@/lib/validation-schemas";
+import { createTeamSchema, teamSettingsSchema } from "@/lib/validation-schemas";
 import { revalidatePath } from "next/cache";
 import { TeamRole, type Prisma } from "../../prisma/generated";
+import { getDurationInMinutes } from "@/lib/utils";
 
 export async function createTeam(
   data: Prisma.TeamCreateInput & { avatar?: File }
@@ -490,4 +491,78 @@ export async function loadTeamServices() {
   }
 
   return { data: services, error: null };
+}
+
+export async function updateTeamSettings(data: {
+  minBookingNoticeAmount: number;
+  minBookingNoticeUnit: string;
+  cancellationPolicy?: string | null;
+  maxAppointmentsPerDay?: number | null;
+  maxAppointmentsPerEmployee?: number | null;
+}) {
+  const { data: user, error: getCurrentUserError } = await tryCatch(
+    getCurrentUser()
+  );
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+  if (!user.currentSessionTeamId) {
+    return { data: null, error: "No current session team" };
+  }
+
+  // Check if the user is an admin in the team
+  const { data: teamMember, error: teamMemberError } = await tryCatch(
+    prisma.teamMember.findUnique({
+      where: {
+        userId_teamId: {
+          userId: user.id,
+          teamId: user.currentSessionTeamId,
+        },
+        role: TeamRole.ADMIN,
+      },
+    })
+  );
+
+  if (teamMemberError || !teamMember) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  const validatedData = teamSettingsSchema.safeParse(data);
+  if (!validatedData.success) {
+    return { data: null, error: "Invalid data" };
+  }
+
+  const minBookingNoticeMinutes = getDurationInMinutes(
+    validatedData.data.minBookingNoticeAmount,
+    validatedData.data.minBookingNoticeUnit
+  );
+
+  // Update or create team settings
+  const { data: settings, error: updateError } = await tryCatch(
+    prisma.teamSettings.upsert({
+      where: {
+        teamId: user.currentSessionTeamId,
+      },
+      update: {
+        ...validatedData.data,
+        minBookingNoticeMinutes,
+      },
+      create: {
+        team: {
+          connect: {
+            id: user.currentSessionTeamId,
+          },
+        },
+        ...validatedData.data,
+        minBookingNoticeMinutes,
+      },
+    })
+  );
+
+  if (updateError) {
+    return { data: null, error: "Failed to update team settings" };
+  }
+
+  await revalidatePath("/admin");
+  return { data: settings, error: null };
 }

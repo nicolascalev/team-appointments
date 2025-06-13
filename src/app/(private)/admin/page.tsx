@@ -1,6 +1,7 @@
 import { getUserCurrentSessionTeam } from "@/actions/team";
 import AdminInvitesList from "@/components/AdminInvitesList";
 import AdminServicesList from "@/components/AdminServicesList";
+import CreateServiceDrawer from "@/components/CreateServiceDrawer";
 import SendInviteDrawer from "@/components/SendInviteDrawer";
 import TeamBusinessHoursForm from "@/components/TeamBusinessHoursForm";
 import TeamForm from "@/components/TeamForm";
@@ -13,18 +14,15 @@ import {
   Divider,
   Group,
   Loader,
-  NumberInput,
-  Select,
   SimpleGrid,
   Text,
-  Textarea,
 } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import AdminTabs from "./AdminTabs";
-import CreateServiceDrawer from "@/components/CreateServiceDrawer";
+import TeamSettingsForm from "@/components/TeamSettingsForm";
 
 async function AdminPage({
   searchParams,
@@ -162,47 +160,19 @@ async function AdminPage({
             <Text fw={500}>Settings</Text>
             <Text c="dimmed">Manage settings for the team</Text>
           </div>
-          <form className="flex flex-col gap-4">
-            <Group wrap="nowrap">
-              <NumberInput
-                label="Minimum booking notice"
-                placeholder="Minimum booking notice"
-                name="minBookingNotice"
-                className="grow"
-              />
-              <Select
-                label="Unit"
-                placeholder="Select unit"
-                defaultValue="minutes"
-                data={[
-                  { value: "minutes", label: "Minutes" },
-                  { value: "hours", label: "Hours" },
-                  { value: "days", label: "Days" },
-                ]}
-                name="minBookingNoticeUnit"
-              />
-            </Group>
-            <Textarea
-              label="Cancellation policy"
-              placeholder="Cancellation policy"
-              name="cancellationPolicy"
-              autosize
-              minRows={4}
-            />
-            <NumberInput
-              label="Max appointments per day"
-              placeholder="Max appointments per day"
-              name="maxAppointmentsPerDay"
-            />
-            <NumberInput
-              label="Max appointments per employee"
-              placeholder="Max appointments per employee"
-              name="maxAppointmentsPerEmployee"
-            />
-            <Group justify="flex-end">
-              <Button type="submit">Save</Button>
-            </Group>
-          </form>
+          <TeamSettingsForm
+            defaultValues={{
+              minBookingNoticeAmount:
+                team.settings?.minBookingNoticeAmount || 0,
+              minBookingNoticeUnit:
+                team.settings?.minBookingNoticeUnit || "minutes",
+              cancellationPolicy: team.settings?.cancellationPolicy || "",
+              maxAppointmentsPerDay:
+                team.settings?.maxAppointmentsPerDay || undefined,
+              maxAppointmentsPerEmployee:
+                team.settings?.maxAppointmentsPerEmployee || undefined,
+            }}
+          />
         </SimpleGrid>
       )}
     </Container>

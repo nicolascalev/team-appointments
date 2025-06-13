@@ -31,3 +31,13 @@ export const createServiceSchema = z.object({
   teamMembers: z.array(z.string()).default([]),
   isActive: z.boolean().default(true),
 });
+
+export const teamSettingsSchema = z.object({
+  minBookingNoticeAmount: z.number().min(0, "Amount must be 0 or greater"),
+  minBookingNoticeUnit: z.enum(["minutes", "hours", "days"], {
+    required_error: "Please select a unit",
+  }),
+  cancellationPolicy: z.string().optional(),
+  maxAppointmentsPerDay: z.number().min(0, "Must be 0 or greater").optional(),
+  maxAppointmentsPerEmployee: z.number().min(0, "Must be 0 or greater").optional(),
+});
