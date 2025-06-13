@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn } from "@/actions/auth";
+import Logo from "@/components/Logo";
 import {
   Button,
   Card,
@@ -66,8 +67,11 @@ export default function LoginPage() {
   return (
     <Center mih="100dvh" p="md">
       <Card withBorder className="w-full max-w-[400px]">
-        <Text size="xl" fw={700} mb="md">
-          Login
+        <Group justify="center">
+          <Logo size="lg" />
+        </Group>
+        <Text size="xl" fw={700} mb="md" ta="center">
+          Login to Teamlypro
         </Text>
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <TextInput

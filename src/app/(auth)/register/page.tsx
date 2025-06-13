@@ -1,6 +1,7 @@
 "use client";
 
 import { signUp } from "@/actions/auth";
+import Logo from "@/components/Logo";
 import {
   Button,
   Card,
@@ -17,15 +18,17 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 
-const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const registerSchema = z
+  .object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
@@ -77,8 +80,11 @@ export default function RegisterPage() {
   return (
     <Center mih="100dvh" p="md">
       <Card withBorder className="w-full max-w-[400px]">
-        <Text size="xl" fw={700} mb="md">
-          Register
+        <Group justify="center">
+          <Logo size="lg" />
+        </Group>
+        <Text size="xl" fw={700} mb="md" ta="center">
+          Register to Teamlypro
         </Text>
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <TextInput

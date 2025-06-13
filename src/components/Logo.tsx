@@ -1,15 +1,17 @@
 "use client";
 
-import { Avatar } from "@mantine/core";
+import { Avatar, AvatarProps } from "@mantine/core";
 import { useColorScheme } from "@mantine/hooks";
 
-function Logo() {
+type LogoProps = AvatarProps;
+function Logo({ ...props }: LogoProps) {
   const colorScheme = useColorScheme("dark");
   const strokeColor = colorScheme === "dark" ? "white" : "black";
   return (
     <Avatar
       radius={0}
       styles={{ placeholder: { backgroundColor: "transparent" } }}
+      {...props}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
