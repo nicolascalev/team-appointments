@@ -10,6 +10,7 @@ import {
   Divider,
   Group,
   Loader,
+  Popover,
   Select,
   SimpleGrid,
   Stack,
@@ -19,10 +20,12 @@ import { useState } from "react";
 import { Service, TeamRole } from "../../prisma/generated";
 import Availability from "./Availability";
 import BlockOffsForm from "./BlockOffsForm";
-import { updateTeamMember } from "@/actions/member";
+import { deleteBlockOff, updateTeamMember } from "@/actions/member";
 import { tryCatch } from "@/lib/try-catch";
 import { showNotification } from "@mantine/notifications";
 import { formatDateLong } from "@/lib/utils";
+import { ActionIcon } from "@mantine/core";
+import { IconTrash } from "@tabler/icons-react";
 
 function EditTeamMemberForm({
   closeModal,
@@ -211,8 +214,13 @@ function EditTeamMemberFormContent({
             </Text>
           )}
           {member.blockOffs.map((blockOff) => (
-            // TODO: Add a button to delete the block off
             <Card withBorder key={blockOff.id}>
+              <Group justify="end">
+                <DeleteBlockOffButton
+                  blockOffId={blockOff.id}
+                  revalidateMember={revalidateMember}
+                />
+              </Group>
               <Text size="sm">
                 From {formatDateLong(new Date(blockOff.start))} <br />
                 To {formatDateLong(new Date(blockOff.end))}
@@ -256,14 +264,96 @@ function EditTeamMemberFormContent({
           ))}
         </Stack>
       </SimpleGrid>
-      <Group justify="flex-end" mt="xl">
-        <Button variant="default" onClick={closeModal}>
-          Cancel
-        </Button>
-        <Button onClick={handleUpdate} loading={updateLoading}>
-          Save
-        </Button>
-      </Group>
+      <div className="sticky bottom-0 bg-[var(--mantine-color-body)]">
+        <Divider mt="xl" />
+        <Group justify="flex-end" py="md">
+          <Button variant="default" onClick={closeModal}>
+            Cancel
+          </Button>
+          <Button onClick={handleUpdate} loading={updateLoading}>
+            Save
+          </Button>
+        </Group>
+      </div>
     </Container>
+  );
+}
+
+function DeleteBlockOffButton({
+  blockOffId,
+  revalidateMember,
+}: {
+  blockOffId: string;
+  revalidateMember: () => void;
+}) {
+  const [opened, setOpened] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  return (
+    <Popover
+      position="bottom-end"
+      withArrow
+      shadow="md"
+      opened={opened}
+      onChange={setOpened}
+    >
+      <Popover.Target>
+        <ActionIcon
+          variant="light"
+          size="sm"
+          color="red"
+          onClick={() => setOpened(true)}
+          loading={deleteLoading}
+        >
+          <IconTrash size={14} />
+        </ActionIcon>
+      </Popover.Target>
+      <Popover.Dropdown w={200}>
+        <Stack>
+          <Text size="sm">Are you sure you want to delete this block off?</Text>
+          <Group justify="flex-end">
+            <Button
+              variant="default"
+              size="xs"
+              onClick={() => setOpened(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="filled"
+              color="red"
+              size="xs"
+              disabled={deleteLoading}
+              onClick={async () => {
+                setDeleteLoading(true);
+                const { data: deletedBlockOff, error: deleteError } =
+                  await tryCatch(deleteBlockOff(blockOffId));
+                if (deleteError || deletedBlockOff?.error) {
+                  showNotification({
+                    title: "Error",
+                    message:
+                      deleteError?.message ||
+                      deletedBlockOff?.error ||
+                      "Something went wrong",
+                    color: "red",
+                  });
+                } else {
+                  showNotification({
+                    title: "Success",
+                    message: "Block off deleted successfully",
+                    color: "green",
+                  });
+                  revalidateMember();
+                  setOpened(false);
+                }
+                setDeleteLoading(false);
+              }}
+            >
+              Delete
+            </Button>
+          </Group>
+        </Stack>
+      </Popover.Dropdown>
+    </Popover>
   );
 }

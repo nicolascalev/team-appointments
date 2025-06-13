@@ -186,3 +186,25 @@ export async function updateTeamMember(
   await revalidatePath(`/admin`);
   return { data: updatedTeamMember, error: null };
 }
+
+export async function deleteBlockOff(blockOffId: string) {
+  const { data: currentUserCanUpdate, error: errorCurrentUserCanUpdate } =
+    await tryCatch(currentUserIsAdminOfMember(blockOffId));
+
+  if (errorCurrentUserCanUpdate || !currentUserCanUpdate) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  const { data: blockOff, error: blockOffError } = await tryCatch(
+    prisma.employeeBlockOff.delete({
+      where: { id: blockOffId },
+    })
+  );
+
+  if (blockOffError) {
+    return { data: null, error: "Error deleting block off" };
+  }
+
+  await revalidatePath(`/admin`);
+  return { data: blockOff, error: null };
+}
