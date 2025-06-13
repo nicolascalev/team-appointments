@@ -19,6 +19,7 @@ import { User } from "../../../prisma/generated/client";
 import { logout } from "@/actions/auth";
 import { IconLogout } from "@tabler/icons-react";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 const links = [
   { label: "Dashboard", href: "/dashboard" },
@@ -67,7 +68,7 @@ export default function LayoutClient({
                 hiddenFrom="sm"
                 size="sm"
               />
-              <Avatar color="teal">TA</Avatar>
+              <Logo />
               <Box visibleFrom="sm">
                 <Button
                   variant="subtle"

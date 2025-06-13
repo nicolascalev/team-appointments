@@ -25,8 +25,8 @@ const theme = createTheme({
 });
 
 export const metadata: Metadata = {
-  title: "Team Appointments",
-  description: "Team Appointments",
+  title: "Teamlypro",
+  description: "Teamlypro is the best free team's scheduling solution",
 };
 
 export default async function RootLayout({

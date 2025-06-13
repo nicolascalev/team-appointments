@@ -90,7 +90,16 @@ export async function getUserCurrentSessionTeam() {
         include: {
           user: true,
           availability: true,
-          blockOffs: true,
+          blockOffs: {
+            where: {
+              end: {
+                gt: new Date(),
+              },
+            },
+            orderBy: {
+              start: "asc",
+            },
+          },
           _count: {
             select: {
               services: true,

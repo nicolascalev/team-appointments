@@ -25,7 +25,16 @@ export async function getTeamMember(teamMemberId: string) {
             services: true,
           },
         },
-        blockOffs: true,
+        blockOffs: {
+          where: {
+            end: {
+              gt: new Date(),
+            },
+          },
+          orderBy: {
+            start: "asc",
+          },
+        },
         services: true,
         user: true,
         availability: true,
