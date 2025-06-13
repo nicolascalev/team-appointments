@@ -205,3 +205,27 @@ export async function deleteBlockOff(blockOffId: string) {
   await revalidatePath(`/admin`);
   return { data: blockOff, error: null };
 }
+
+export async function updateMemberBio(teamMemberId: string, bio: string) {
+  const { data: currentUserCanUpdate, error: errorCurrentUserCanUpdate } =
+    await tryCatch(currentUserIsAdminOfMember(teamMemberId));
+
+  if (errorCurrentUserCanUpdate || !currentUserCanUpdate) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  const { data: updatedTeamMember, error: updateError } = await tryCatch(
+    prisma.teamMember.update({
+      where: { id: teamMemberId },
+      data: {
+        bio,
+      },
+    })
+  );
+
+  if (updateError) {
+    return { data: null, error: "Error updating bio" };
+  }
+
+  return { data: updatedTeamMember, error: null };
+}

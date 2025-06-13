@@ -1,4 +1,6 @@
+import { getUserTeamPageData } from "@/actions/user";
 import CreateTeamDrawer from "@/components/CreateTeamDrawer";
+import MemberUpdateBioForm from "@/components/MemberUpdateBioForm";
 import TeamSelect from "@/components/TeamSelect";
 import {
   Avatar,
@@ -9,12 +11,31 @@ import {
   Group,
   SimpleGrid,
   Text,
-  Textarea,
 } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
-import React from "react";
+import { getCurrentUser } from "@/actions/auth";
+import { formatDateLong } from "@/lib/utils";
 
 async function TeamPage() {
+  const user = await getCurrentUser();
+  const { data, error } = await getUserTeamPageData();
+
+  if (!user) {
+    return <div>Unauthorized</div>;
+  }
+
+  if (error || !data) {
+    return <div>{error}</div>;
+  }
+
+  const currentTeamMember = data.currentSessionTeam?.members.find(
+    (member) => member.userId === user.id
+  );
+
+  const userIsOnSchedule =
+    currentTeamMember?.isActive &&
+    currentTeamMember?.isSchedulable &&
+    currentTeamMember?.availability.length > 0;
+
   return (
     <Container size="md" p={0}>
       <Text fw={500} my="xl" size="lg">
@@ -23,54 +44,60 @@ async function TeamPage() {
       <SimpleGrid cols={{ base: 1, sm: 2 }}>
         <div>
           <Text fw={500}>Active team</Text>
-          <Text c="dimmed">Select the team you want to see</Text>
-          <CreateTeamDrawer
-            trigger={
-              <Button
-                variant="default"
-                size="sm"
-                leftSection={<IconPlus size={14} />}
-                mt="xs"
-              >
-                Create team
-              </Button>
-            }
-          />
+          <Text c="dimmed" mb="md">
+            Select the team you want to see
+          </Text>
+          <CreateTeamDrawer />
         </div>
         <div className="flex flex-col gap-4">
-          <TeamSelect />
-          <form className="flex flex-col gap-4">
-            <Textarea
-              label="Bio"
-              description="Short bio of your role in the team"
-              placeholder="For example: Full-time barber, nail specialist..."
-              name="bio"
-              minRows={2}
-              autosize
-            />
-            <Group justify="flex-end">
-              <Button type="submit">Save</Button>
-            </Group>
-          </form>
+          <TeamSelect
+            teams={data.teams}
+            currentTeam={data.currentSessionTeam}
+          />
+          {currentTeamMember && (
+            <MemberUpdateBioForm member={currentTeamMember} />
+          )}
         </div>
       </SimpleGrid>
       <Divider my="xl" />
       <SimpleGrid cols={{ base: 1, sm: 2 }}>
         <div>
-          <Text fw={500}>Your availability</Text>
+          <Text fw={500}>Your availability with the current team</Text>
           <Text c="dimmed">These are the times you are scheduled to work</Text>
         </div>
         <div className="flex flex-col gap-4">
           <div>
             <Text fw={500}>Your schedule</Text>
-            <Text c="dimmed">Mondays: 10:00 - 18:00</Text>
-            <Text c="dimmed">Tuesdays: 10:00 - 18:00</Text>
-            <Text c="dimmed">Wednesdays: 10:00 - 18:00</Text>
-            <Text c="dimmed">Thursdays: 10:00 - 18:00</Text>
+            {userIsOnSchedule ? (
+              <>
+                {currentTeamMember?.availability.map((availability) => (
+                  <Text key={availability.id} c="dimmed">
+                    {new Intl.DateTimeFormat("en-US", {
+                      weekday: "long",
+                    }).format(new Date(2024, 0, availability.dayOfWeek))}
+                    : {availability.startTime} - {availability.endTime}
+                  </Text>
+                ))}
+              </>
+            ) : (
+              <Text c="dimmed">You are not on schedule</Text>
+            )}
           </div>
           <div>
             <Text fw={500}>Upcoming blocks off</Text>
-            <Text c="dimmed">No upcoming blocks off</Text>
+            {currentTeamMember?.blockOffs.length &&
+            currentTeamMember?.blockOffs.length > 0 ? (
+              <>
+                {currentTeamMember?.blockOffs.map((blockOff) => (
+                  <Text key={blockOff.id} c="dimmed">
+                    {formatDateLong(new Date(blockOff.start))} -{" "}
+                    {formatDateLong(new Date(blockOff.end))}
+                  </Text>
+                ))}
+              </>
+            ) : (
+              <Text c="dimmed">No upcoming blocks off</Text>
+            )}
           </div>
         </div>
       </SimpleGrid>
@@ -81,20 +108,17 @@ async function TeamPage() {
           <Text c="dimmed">This are the teams you are a member of</Text>
         </div>
         <div className="flex flex-col gap-4">
-          <Group>
-            <Avatar color="teal">TA</Avatar>
-            <Text>Team Alpha</Text>
-            <Badge color="gray" variant="light" radius="xs" className="">
-              Admin
-            </Badge>
-          </Group>
-          <Group>
-            <Avatar color="teal">TA</Avatar>
-            <Text>Team Alpha</Text>
-            <Badge color="gray" variant="light" radius="xs" className="">
-              Admin
-            </Badge>
-          </Group>
+          {data.teams.map((team) => (
+            <Group key={team.id}>
+              <Avatar color="teal" src={team.avatarUrl}>
+                {team.name.charAt(0)}
+              </Avatar>
+              <Text>{team.name}</Text>
+              <Badge color="gray" variant="light" radius="xs" className="">
+                {team.members.find((member) => member.userId === user.id)?.role}
+              </Badge>
+            </Group>
+          ))}
         </div>
       </SimpleGrid>
       <Divider my="xl" />

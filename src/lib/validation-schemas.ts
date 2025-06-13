@@ -41,3 +41,7 @@ export const teamSettingsSchema = z.object({
   maxAppointmentsPerDay: z.number().min(0, "Must be 0 or greater").optional(),
   maxAppointmentsPerEmployee: z.number().min(0, "Must be 0 or greater").optional(),
 });
+
+export const memberBioSchema = z.object({
+  bio: z.string().max(100, "Bio must be 100 characters or less").optional(),
+});
