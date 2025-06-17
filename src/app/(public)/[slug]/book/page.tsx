@@ -1,6 +1,6 @@
 import { getServiceBookingPageData } from "@/actions/booking";
 import BookingServiceDateInput from "@/components/BookingServiceDateInput";
-import MembersToggle from "@/components/MembersToggle";
+import BookingServiceMembersToggle from "@/components/BookingServiceMembersToggle";
 import {
   Alert,
   Avatar,
@@ -119,7 +119,7 @@ export default async function BookPage({
               Team member
             </Text>
             {service.team.members.length > 0 ? (
-              <MembersToggle
+              <BookingServiceMembersToggle
                 members={service.team.members}
                 defaultSelectedMembers={service.team.members}
               />
