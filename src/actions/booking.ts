@@ -43,3 +43,45 @@ export async function getBookingPageData(slug: string) {
 
   return { data: team, error: null };
 }
+
+export async function getServiceBookingPageData(serviceId: string) {
+  const { data: service, error: serviceError } = await tryCatch(
+    prisma.service.findUnique({
+      where: {
+        id: serviceId,
+      },
+      include: {
+        team: {
+          include: {
+            settings: true,
+            businessHours: true,
+            members: {
+              where: {
+                isActive: true,
+                isSchedulable: true,
+                services: {
+                  some: {
+                    id: serviceId,
+                  },
+                },
+              },
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+    })
+  );
+
+  if (!service) {
+    return { data: null, error: "Service not found" };
+  }
+
+  if (serviceError) {
+    return { data: null, error: "Failed to load service" };
+  }
+
+  return { data: service, error: null };
+}

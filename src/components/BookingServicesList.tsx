@@ -4,8 +4,15 @@ import { Button, Card, Flex, Group, Select, Text } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 import { Service } from "../../prisma/generated";
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
-function BookingServicesList({ services }: { services: Service[] }) {
+function BookingServicesList({
+  services,
+  slug,
+}: {
+  services: Service[];
+  slug: string;
+}) {
   const categories = useMemo(() => {
     const set = [
       "All",
@@ -60,6 +67,8 @@ function BookingServicesList({ services }: { services: Service[] }) {
               <Button
                 variant="light"
                 rightSection={<IconChevronRight size={14} />}
+                component={Link}
+                href={`/${slug}/book?serviceId=${service.id}`}
               >
                 Book
               </Button>

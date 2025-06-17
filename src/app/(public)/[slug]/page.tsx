@@ -109,7 +109,7 @@ async function TeamPage({ params }: { params: Promise<{ slug: string }> }) {
           </Group>
         </Flex>
         <Divider />
-        <BookingServicesList services={data.services} />
+        <BookingServicesList services={data.services} slug={slug} />
       </Flex>
     </Container>
   );
