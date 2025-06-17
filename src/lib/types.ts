@@ -93,3 +93,9 @@ export type BlockOff = {
   end: string;
   reason?: string;
 };
+
+export type InviteWithTeam = Prisma.InviteGetPayload<{
+  include: {
+    team: true;
+  };
+}>;

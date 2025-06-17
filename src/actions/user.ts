@@ -80,6 +80,9 @@ export async function getUserTeamPageData() {
           gt: new Date(),
         },
       },
+      include: {
+        team: true,
+      },
     })
   );
 
@@ -138,4 +141,114 @@ export async function updateUserCurrentSessionTeam(teamId: string) {
   await revalidatePath("/team");
 
   return { data: updatedUser, error: null };
+}
+
+export async function acceptInvite(inviteId: string) {
+  const { data: user, error: getCurrentUserError } = await tryCatch(
+    getCurrentUser()
+  );
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  // Get the invite and check if it's expired
+  const { data: invite, error: inviteError } = await tryCatch(
+    prisma.invite.findUnique({
+      where: { id: inviteId },
+      include: { team: true },
+    })
+  );
+
+  if (inviteError || !invite) {
+    return { data: null, error: "Invite not found" };
+  }
+
+  if (new Date(invite.expiresAt) < new Date()) {
+    return { data: null, error: "Invite has expired" };
+  }
+
+  // Check if user is already a member of the team
+  const { data: existingMember, error: memberError } = await tryCatch(
+    prisma.teamMember.findUnique({
+      where: {
+        userId_teamId: {
+          userId: user.id,
+          teamId: invite.teamId,
+        },
+      },
+    })
+  );
+
+  if (memberError) {
+    return { data: null, error: "Failed to check team membership" };
+  }
+
+  if (existingMember) {
+    return { data: null, error: "You are already a member of this team" };
+  }
+
+  // Create team member and update current session team
+  const { data: teamMember, error: createError } = await tryCatch(
+    prisma.$transaction([
+      prisma.teamMember.create({
+        data: {
+          userId: user.id,
+          teamId: invite.teamId,
+          role: invite.role,
+        },
+      }),
+      prisma.invite.delete({
+        where: { id: inviteId },
+      }),
+      prisma.user.update({
+        where: { id: user.id },
+        data: { currentSessionTeamId: invite.teamId },
+      }),
+    ])
+  );
+
+  if (createError) {
+    return { data: null, error: "Failed to accept invite" };
+  }
+
+  revalidatePath("/team");
+  return { data: teamMember, error: null };
+}
+
+export async function rejectInvite(inviteId: string) {
+  const { data: user, error: getCurrentUserError } = await tryCatch(
+    getCurrentUser()
+  );
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  // Get the invite and check if it's expired
+  const { data: invite, error: inviteError } = await tryCatch(
+    prisma.invite.findUnique({
+      where: { id: inviteId },
+    })
+  );
+
+  if (inviteError || !invite) {
+    return { data: null, error: "Invite not found" };
+  }
+
+  if (new Date(invite.expiresAt) < new Date()) {
+    return { data: null, error: "Invite has expired" };
+  }
+
+  // Delete the invite
+  const { data: deletedInvite, error: deleteError } = await tryCatch(
+    prisma.invite.delete({
+      where: { id: inviteId },
+    })
+  );
+
+  if (deleteError) {
+    return { data: null, error: "Failed to reject invite" };
+  }
+
+  revalidatePath("/team");
+  return { data: deletedInvite, error: null };
 }

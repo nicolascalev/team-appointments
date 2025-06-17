@@ -5,7 +5,6 @@ import TeamSelect from "@/components/TeamSelect";
 import {
   Avatar,
   Badge,
-  Button,
   Container,
   Divider,
   Group,
@@ -14,6 +13,7 @@ import {
 } from "@mantine/core";
 import { getCurrentUser } from "@/actions/auth";
 import { formatDateLong } from "@/lib/utils";
+import UserInvite from "@/components/UserInvite";
 
 async function TeamPage() {
   const user = await getCurrentUser();
@@ -50,10 +50,17 @@ async function TeamPage() {
           <CreateTeamDrawer />
         </div>
         <div className="flex flex-col gap-4">
-          <TeamSelect
-            teams={data.teams}
-            currentTeam={data.currentSessionTeam}
-          />
+          {data.teams.length > 0 ? (
+            <TeamSelect
+              teams={data.teams}
+              currentTeam={data.currentSessionTeam}
+            />
+          ) : (
+            <Text c="dimmed">
+              No teams found. Create a team or check your invites to join a
+              team.
+            </Text>
+          )}
           {currentTeamMember && (
             <MemberUpdateBioForm member={currentTeamMember} />
           )}
@@ -108,21 +115,33 @@ async function TeamPage() {
           <Text c="dimmed">This are the teams you are a member of</Text>
         </div>
         <div className="flex flex-col gap-4">
-          {data.teams.map((team) => (
-            <Group key={team.id}>
-              <Avatar color="teal" src={team.avatarUrl}>
-                {team.name.charAt(0)}
-              </Avatar>
-              <Text>{team.name}</Text>
-              <Badge color="gray" variant="light" radius="xs" className="">
-                {team.members.find((member) => member.userId === user.id)?.role}
-              </Badge>
-            </Group>
-          ))}
+          {data.teams.length > 0 ? (
+            <>
+              {data.teams.map((team) => (
+                <Group key={team.id}>
+                  <Avatar color="teal" src={team.avatarUrl}>
+                    {team.name.charAt(0)}
+                  </Avatar>
+                  <Text>{team.name}</Text>
+                  <Badge color="gray" variant="light" radius="xs" className="">
+                    {
+                      team.members.find((member) => member.userId === user.id)
+                        ?.role
+                    }
+                  </Badge>
+                </Group>
+              ))}
+            </>
+          ) : (
+            <Text c="dimmed">
+              No teams found. Create a team or check your invites to join a
+              team.
+            </Text>
+          )}
         </div>
       </SimpleGrid>
       <Divider my="xl" />
-      <SimpleGrid cols={{ base: 1, sm: 2 }}>
+      <SimpleGrid cols={{ base: 1, sm: 2 }} mb="xl">
         <div>
           <Text fw={500}>Team invitations</Text>
           <Text c="dimmed">
@@ -130,38 +149,15 @@ async function TeamPage() {
           </Text>
         </div>
         <div className="flex flex-col gap-4">
-          <Group align="flex-start" wrap="nowrap">
-            <Avatar color="teal">TA</Avatar>
-            <div className="flex flex-col gap-2 grow">
-              <Text>Team invitation 1</Text>
-              <Text c="dimmed" size="sm">
-                You have been invited to join Team Alpha as an Admin.
-              </Text>
-              <Text c="dimmed" size="sm">
-                Expires in 1 day
-              </Text>
-              <Group justify="flex-end">
-                <Button variant="default">Accept</Button>
-                <Button variant="default">Reject</Button>
-              </Group>
-            </div>
-          </Group>
-          <Group align="flex-start" wrap="nowrap">
-            <Avatar color="teal">TA</Avatar>
-            <div className="flex flex-col gap-2 grow">
-              <Text>Team invitation 1</Text>
-              <Text c="dimmed" size="sm">
-                You have been invited to join Team Alpha as an Admin.
-              </Text>
-              <Text c="dimmed" size="sm">
-                Expires in 1 day
-              </Text>
-              <Group justify="flex-end">
-                <Button variant="default">Accept</Button>
-                <Button variant="default">Reject</Button>
-              </Group>
-            </div>
-          </Group>
+          {data.invites.length > 0 ? (
+            <>
+              {data.invites.map((invite) => (
+                <UserInvite key={invite.id} invite={invite} />
+              ))}
+            </>
+          ) : (
+            <Text c="dimmed">No team invitations found</Text>
+          )}
         </div>
       </SimpleGrid>
     </Container>
