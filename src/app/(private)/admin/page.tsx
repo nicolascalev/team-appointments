@@ -6,6 +6,7 @@ import SendInviteDrawer from "@/components/SendInviteDrawer";
 import TeamBusinessHoursForm from "@/components/TeamBusinessHoursForm";
 import TeamForm from "@/components/TeamForm";
 import TeamMemberCard from "@/components/TeamMemberCard";
+import TeamSettingsForm from "@/components/TeamSettingsForm";
 import { tryCatch } from "@/lib/try-catch";
 import {
   Avatar,
@@ -17,12 +18,11 @@ import {
   SimpleGrid,
   Text,
 } from "@mantine/core";
-import { IconChevronRight } from "@tabler/icons-react";
+import { IconArrowUpRight, IconChevronRight } from "@tabler/icons-react";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import AdminTabs from "./AdminTabs";
-import TeamSettingsForm from "@/components/TeamSettingsForm";
 
 async function AdminPage({
   searchParams,
@@ -40,11 +40,24 @@ async function AdminPage({
   return (
     <Container size="md" p={0}>
       <div>
-        <Group mb="xl" mt="md">
+        <Group mb="xl" mt="md" align="flex-start">
           <Avatar color="teal" src={team.avatarUrl}>
             {team.name.slice(0, 2)}
           </Avatar>
-          <Text>{team.name}</Text>
+          <div>
+            <Text>{team.name}</Text>
+            <Button
+              mt="xs"
+              variant="light"
+              size="xs"
+              rightSection={<IconArrowUpRight size={14} />}
+              component="a"
+              href={`/${team.slug}`}
+              target="_blank"
+            >
+              Booking page
+            </Button>
+          </div>
         </Group>
       </div>
       <AdminTabs activeTab={tab} />

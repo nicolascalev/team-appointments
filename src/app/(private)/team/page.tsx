@@ -5,6 +5,7 @@ import TeamSelect from "@/components/TeamSelect";
 import {
   Avatar,
   Badge,
+  Button,
   Container,
   Divider,
   Group,
@@ -14,6 +15,7 @@ import {
 import { getCurrentUser } from "@/actions/auth";
 import { formatDateLong } from "@/lib/utils";
 import UserInvite from "@/components/UserInvite";
+import { IconArrowUpRight } from "@tabler/icons-react";
 
 async function TeamPage() {
   const user = await getCurrentUser();
@@ -47,7 +49,20 @@ async function TeamPage() {
           <Text c="dimmed" mb="md">
             Select the team you want to see
           </Text>
-          <CreateTeamDrawer />
+          <Group>
+            <CreateTeamDrawer />
+            {data.currentSessionTeam && (
+              <Button
+                variant="light"
+                rightSection={<IconArrowUpRight size={14} />}
+                component="a"
+                href={`/${data.currentSessionTeam.slug}`}
+                target="_blank"
+              >
+                Booking page
+              </Button>
+            )}
+          </Group>
         </div>
         <div className="flex flex-col gap-4">
           {data.teams.length > 0 ? (

@@ -1,114 +1,115 @@
+import { getBookingPageData } from "@/actions/booking";
+import BookingServicesList from "@/components/BookingServicesList";
 import {
-  Button,
   Avatar,
-  Card,
   Container,
   Divider,
   Flex,
   Group,
-  Select,
-  Text,
+  Text
 } from "@mantine/core";
-import { IconChevronRight, IconClock, IconLocation, IconMail, IconPhone } from "@tabler/icons-react";
-import React from "react";
+import {
+  IconClock,
+  IconLocation,
+  IconMail,
+  IconPhone
+} from "@tabler/icons-react";
+import { notFound } from "next/navigation";
 
-function TeamPage() {
+async function TeamPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const { data, error } = await getBookingPageData(slug);
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!data) {
+    return notFound();
+  }
+
   return (
     <Container py="xl" size="md">
       <Flex direction="column" gap="xl">
         <Group>
-          <Avatar>PN</Avatar>
+          <Avatar src={data.avatarUrl}>{data.name.charAt(0)}</Avatar>
           <div>
-            <Text fw={500}>Perla Negra</Text>
+            <Text fw={500}>{data.name}</Text>
             <Text size="sm" c="dimmed">
-              Tattoo Shop
+              {data.category}
             </Text>
           </div>
         </Group>
         <Flex direction="column" gap="xs">
-          <Text size="sm">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
-            quos.
-          </Text>
+          <Text size="sm">{data.bio}</Text>
           <Group wrap="nowrap" gap="xs">
             <IconLocation size={14} />
-            <Text size="sm">Lorem ipsum dolor sit</Text>
+            <Text size="sm">{data.location}</Text>
           </Group>
           <Group wrap="nowrap" gap="xs" align="flex-start">
             <IconClock size={14} className="mt-1" />
-            <Text size="sm">
-              Monday: 10:00 AM - 6:00 PM
-              <br />
-              Tuesday: 10:00 AM - 6:00 PM
-              <br />
-              Wednesday: 10:00 AM - 6:00 PM
-              <br />
-              Thursday: 10:00 AM - 6:00 PM
-            </Text>
+            <div>
+              {data.businessHours.map((availability) => (
+                <Text key={availability.id} size="sm">
+                  {new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(
+                    new Date(2024, 0, availability.dayOfWeek)
+                  )}
+                  : {availability.openTime} - {availability.closeTime}
+                </Text>
+              ))}
+            </div>
           </Group>
           <Group wrap="nowrap" gap="xs">
             <IconMail size={14} />
-            <Text size="sm">perla.negra@gmail.com</Text>
+            <Text size="sm">{data.contactEmail}</Text>
           </Group>
           <Group wrap="nowrap" gap="xs">
             <IconPhone size={14} />
-            <Text size="sm">+123 456 7890</Text>
+            <Text size="sm">{data.contactPhone}</Text>
           </Group>
         </Flex>
         <Divider />
         <Flex direction="column" gap="md">
           <Text fw={500}>Team</Text>
-          <Group>
-            <Flex direction="column" gap="4" align="center" w={100} maw={100}>
-              <Avatar>BG</Avatar>
-              <Text fw={500} size="sm" truncate="end" ta="center" w={100} maw={100}>
-                Bryan Guillen
-              </Text>
-              <Text size="xs" c="dimmed" truncate="end" ta="center" w={100} maw={100} >
-                Tattoo Artist
-              </Text>
-            </Flex>
-            <Flex direction="column" gap="4" align="center" w={100} maw={100}>
-              <Avatar>BG</Avatar>
-              <Text fw={500} size="sm" truncate="end" ta="center" w={100} maw={100}>
-                Bryan Guillen
-              </Text>
-              <Text size="xs" c="dimmed" truncate="end" ta="center" w={100} maw={100} >
-                Tattoo Artist
-              </Text>
-            </Flex>
+          <Group align="flex-start">
+            {data.members.map((member) => (
+              <Flex
+                key={member.id}
+                direction="column"
+                gap="4"
+                align="center"
+                w={100}
+                maw={100}
+              >
+                <Avatar src={member.user.avatarUrl}>
+                  {member.user.name?.charAt(0) || "U"}
+                </Avatar>
+                <Text
+                  fw={500}
+                  size="sm"
+                  truncate="end"
+                  ta="center"
+                  w={100}
+                  maw={100}
+                >
+                  {member.user.name}
+                </Text>
+                <Text
+                  size="xs"
+                  c="dimmed"
+                  truncate="end"
+                  ta="center"
+                  w={100}
+                  maw={100}
+                >
+                  {member.bio}
+                </Text>
+              </Flex>
+            ))}
           </Group>
         </Flex>
         <Divider />
-        <Flex direction="column" gap="md">
-          <Text fw={500}>Services</Text>
-          <Select
-            data={["All", "Tattoo", "Piercing"]}
-            placeholder="Select a service"
-            defaultValue={"All"}
-            maw={300}
-          />
-          <Card withBorder>
-            <Flex direction="column" gap="xs">
-              <Text fw={500}>Tattoo</Text>
-              <Text size="sm" c="dimmed">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                Quisquam, quos.
-              </Text>
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  $100 - 1 hour
-                </Text>
-                <Button
-                  variant="light"
-                  rightSection={<IconChevronRight size={14} />}
-                >
-                  Book
-                </Button>
-              </Group>
-            </Flex>
-          </Card>
-        </Flex>
+        <BookingServicesList services={data.services} />
       </Flex>
     </Container>
   );
