@@ -55,7 +55,11 @@ export default function TeamForm({
           ? "Slug can only contain lowercase letters, numbers, and hyphens"
           : null,
       contactEmail: (value) =>
-        value && !/^\S+@\S+$/.test(value) ? "Invalid email" : null,
+        !value 
+          ? "Contact email is required" 
+          : !/^\S+@\S+$/.test(value) 
+            ? "Invalid email" 
+            : null,
     },
   });
 
@@ -74,6 +78,15 @@ export default function TeamForm({
   };
 
   const handleSubmit = async (values: typeof form.values) => {
+    form.validate();
+    if (!form.isValid()) {
+      notifications.show({
+        title: "Error",
+        message: "Please fill in all fields",
+        color: "red",
+      });
+      return;
+    }
     try {
       setLoading(true);
 
@@ -179,6 +192,7 @@ export default function TeamForm({
         <TextInput
           label="Contact Email"
           placeholder="contact@example.com"
+          required
           {...form.getInputProps("contactEmail")}
         />
 
