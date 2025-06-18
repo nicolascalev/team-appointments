@@ -99,3 +99,19 @@ export type InviteWithTeam = Prisma.InviteGetPayload<{
     team: true;
   };
 }>;
+
+export type BookingService = Prisma.ServiceGetPayload<{
+  include: {
+    team: {
+      include: {
+        settings: true;
+        businessHours: true;
+        members: {
+          include: {
+            user: true;
+          };
+        };
+      };
+    };
+  };
+}>;

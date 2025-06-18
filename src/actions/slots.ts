@@ -1,26 +1,26 @@
-import {
-  startOfMonth,
-  endOfMonth,
-  addMinutes,
-  isBefore,
-  isAfter,
-} from "date-fns";
+import { startOfDay, endOfDay, addMinutes, isBefore, isAfter } from "date-fns";
 import { prisma } from "@/lib/prisma";
 
 type GetAvailableSlotsArgs = {
   teamId: string;
   serviceId: string;
   employeeIds?: string[]; // Optional filter
+  date?: string;
 };
 
 export async function getAvailableSlots({
   teamId,
   serviceId,
   employeeIds,
+  date,
 }: GetAvailableSlotsArgs) {
+  if (!teamId || !serviceId) return [];
+
   const now = new Date();
-  const monthStart = startOfMonth(now);
-  const monthEnd = endOfMonth(now);
+  const dayStart = date
+    ? startOfDay(date)
+    : startOfDay(now);
+  const dayEnd = date ? endOfDay(date) : endOfDay(now);
 
   // Get service details for duration and buffer
   const service = await prisma.service.findUnique({
@@ -42,7 +42,7 @@ export async function getAvailableSlots({
     where: { teamId },
   });
 
-  const minNotice = settings?.minBookingNoticeMinutes ?? 60;
+  const minNotice = settings?.minBookingNoticeMinutes ?? 5;
 
   // Get employees
   const employees = await prisma.teamMember.findMany({
@@ -56,13 +56,13 @@ export async function getAvailableSlots({
       availability: true,
       blockOffs: {
         where: {
-          OR: [{ start: { lte: monthEnd }, end: { gte: monthStart } }],
+          OR: [{ start: { lte: dayEnd }, end: { gte: dayStart } }],
         },
       },
       appointments: {
         where: {
-          start: { lte: monthEnd },
-          end: { gte: monthStart },
+          start: { lte: dayEnd },
+          end: { gte: dayStart },
         },
         include: { service: true },
       },
@@ -78,8 +78,8 @@ export async function getAvailableSlots({
       (a) => a.dayOfWeek
     );
 
-    const current = new Date(monthStart);
-    const end = new Date(monthEnd);
+    const current = dayStart;
+    const end = dayEnd;
 
     const employeeSlots: { date: string; slots: string[] }[] = [];
 
@@ -130,7 +130,7 @@ export async function getAvailableSlots({
 
           // Too soon to book?
           if (isBefore(cursor, addMinutes(now, minNotice))) {
-            cursor = addMinutes(cursor, 15); // Skip 15 min and try again
+            cursor = addMinutes(cursor, duration + buffer); // Skip by service duration + buffer
             continue;
           }
 
@@ -154,7 +154,7 @@ export async function getAvailableSlots({
             dailySlots.push(cursor.toISOString());
           }
 
-          cursor = addMinutes(cursor, 15); // move to next potential slot
+          cursor = addMinutes(cursor, duration + buffer); // move to next potential slot
         }
       }
 
@@ -168,7 +168,12 @@ export async function getAvailableSlots({
     slotsByEmployee[employee.id] = employeeSlots;
   }
 
-  return slotsByEmployee;
+  const slotsDataFormatted = new Set(
+    Object.values(slotsByEmployee).flatMap((dates) =>
+      dates.flatMap((date) => date.slots)
+    )
+  );
+  return Array.from(slotsDataFormatted);
 }
 
 // TODO: generate function to validate if a slot is available, that way we can check at the time of booking just in case the user left the page open for a while

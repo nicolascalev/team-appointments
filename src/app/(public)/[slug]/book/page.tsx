@@ -1,6 +1,8 @@
 import { getServiceBookingPageData } from "@/actions/booking";
+import { getAvailableSlots } from "@/actions/slots";
 import BookingServiceDateInput from "@/components/BookingServiceDateInput";
 import BookingServiceMembersToggle from "@/components/BookingServiceMembersToggle";
+import BookingServiceSlots from "@/components/BookingServiceSlots";
 import {
   Alert,
   Avatar,
@@ -9,7 +11,6 @@ import {
   Container,
   Flex,
   Group,
-  Select,
   Text,
 } from "@mantine/core";
 import {
@@ -19,6 +20,7 @@ import {
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Suspense } from "react";
 
 type Params = { slug: string };
 type SearchParams = { [key: string]: string | string[] | undefined };
@@ -31,7 +33,7 @@ export default async function BookPage({
   searchParams: Promise<SearchParams>;
 }) {
   const { slug } = await params;
-  const { serviceId } = await searchParams;
+  const { serviceId, date, members } = await searchParams;
 
   if (!serviceId || typeof serviceId !== "string") {
     return redirect(`/${slug}`);
@@ -52,6 +54,13 @@ export default async function BookPage({
     Date.now() +
       (service.team.settings?.minBookingNoticeMinutes ?? 5) * 60 * 1000
   );
+
+  const slots = getAvailableSlots({
+    teamId: service.team.id,
+    serviceId,
+    date: date as string,
+    employeeIds: typeof members === "string" ? members.split(",") : [],
+  });
 
   return (
     <Container py="xl" size="md">
@@ -137,26 +146,9 @@ export default async function BookPage({
             />
           </div>
           <div>
-            <Select
-              label="Slot"
-              data={[
-                "10:00 AM",
-                "11:00 AM",
-                "12:00 PM",
-                "1:00 PM",
-                "2:00 PM",
-                "3:00 PM",
-                "4:00 PM",
-                "5:00 PM",
-                "6:00 PM",
-                "7:00 PM",
-                "8:00 PM",
-                "9:00 PM",
-                "10:00 PM",
-              ]}
-              placeholder="Select a slot"
-              maw={{ sm: 300 }}
-            />
+            <Suspense fallback={<div>Loading...</div>}>
+              <BookingServiceSlots slots={slots} service={service} />
+            </Suspense>
           </div>
         </Flex>
         <Group justify="flex-end" mt="xl">
