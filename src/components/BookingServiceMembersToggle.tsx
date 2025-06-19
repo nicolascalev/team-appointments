@@ -41,6 +41,9 @@ function BookingServiceMembersToggle({
     
     // Update URL while preserving all other search params
     window.history.replaceState({}, '', `${url.pathname}?${searchParams.toString()}`);
+    
+    // Dispatch custom event to notify other components of URL change
+    window.dispatchEvent(new CustomEvent('urlUpdated'));
   };
 
   return (

@@ -2,17 +2,17 @@ import { ColorSchemeScript, MantineProvider, createTheme } from "@mantine/core";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/dropzone/styles.css";
+import '@mantine/nprogress/styles.css';
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import "@mantine/notifications/styles.css";
-import { NavigationProgress } from "@mantine/nprogress";
-import "@mantine/nprogress/styles.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/context/user-context";
 import { getCurrentUser } from "@/actions/auth";
 import crypto from "crypto";
+import { NavigationProgressWrapper } from "@/components/NavigationProgressWrapper";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -44,7 +44,7 @@ export default async function RootLayout({
         <MantineProvider theme={theme} defaultColorScheme="auto">
           <ModalsProvider>
             <UserProvider initialUser={user}>
-              <NavigationProgress />
+              <NavigationProgressWrapper />
               <Notifications />
               {children}
             </UserProvider>

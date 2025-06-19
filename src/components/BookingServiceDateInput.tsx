@@ -31,6 +31,9 @@ function BookingServiceDateInput({
     
     // Update URL while preserving all other search params
     window.history.replaceState({}, '', `${url.pathname}?${searchParams.toString()}`);
+    
+    // Dispatch custom event to notify other components of URL change
+    window.dispatchEvent(new CustomEvent('urlUpdated'));
   };
 
   return (
@@ -51,6 +54,7 @@ function BookingServiceDateInput({
         return isExcluded;
       }}
       weekendDays={[]}
+      valueFormat="dddd MMM D, YYYY"
     />
   );
 }

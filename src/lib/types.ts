@@ -109,6 +109,7 @@ export type BookingService = Prisma.ServiceGetPayload<{
         members: {
           include: {
             user: true;
+            availability: true;
           };
         };
       };

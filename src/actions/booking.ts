@@ -67,6 +67,7 @@ export async function getServiceBookingPageData(serviceId: string) {
               },
               include: {
                 user: true,
+                availability: true,
               },
             },
           },
