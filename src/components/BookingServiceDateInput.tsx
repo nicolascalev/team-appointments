@@ -37,14 +37,18 @@ function BookingServiceDateInput({
     <DateInput
       label="Date"
       placeholder="Select a date"
-      maw={{ sm: 300 }}
       minDate={minDate}
       value={selectedDate}
       highlightToday
       onChange={handleDateChange}
       excludeDate={(date) => {
-        const dayOfWeek = new Date(date).getDay();
-        return !businessHours.some((hour) => hour.dayOfWeek === dayOfWeek);
+        // Parse date string manually to avoid timezone issues
+        // DateInput typically passes dates in YYYY-MM-DD format
+        const [year, month, day] = date.split('-').map(Number);
+        const parsedDate = new Date(year, month - 1, day); // month is 0-indexed in JS Date
+        const dayOfWeek = parsedDate.getDay();
+        const isExcluded = !businessHours.some((hour) => hour.dayOfWeek === dayOfWeek);
+        return isExcluded;
       }}
       weekendDays={[]}
     />

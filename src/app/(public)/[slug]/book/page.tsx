@@ -63,7 +63,7 @@ export default async function BookPage({
   });
 
   return (
-    <Container py="xl" size="md">
+    <Container py="xl" size="xs">
       <Flex direction="column" gap="md">
         <div>
           <Button
@@ -122,7 +122,15 @@ export default async function BookPage({
             </Group>
           </Flex>
         </Card>
-        <Flex direction="column" gap="md" mt="xl">
+        <Flex direction="column" gap="md">
+          <Flex direction="column" gap="md">
+            <Text fw={600} size="sm">
+              Minimum booking notice
+            </Text>
+            <Text size="sm" c="dimmed">
+              {service.team.settings?.minBookingNoticeMinutes} minutes
+            </Text>
+          </Flex>
           <Flex direction="column" gap="md">
             <Text fw={600} size="sm">
               Team member

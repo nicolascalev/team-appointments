@@ -30,13 +30,10 @@ function BookingServiceSlots({
     return isAfter(slot.value, minNoticeDate);
   });
 
-  console.log({ minNoticeDate, slotsData });
-
   return (
     <Select
       label="Slot"
       placeholder="Select a slot"
-      maw={{ sm: 300 }}
       data={slotsDataFiltered}
     />
   );
