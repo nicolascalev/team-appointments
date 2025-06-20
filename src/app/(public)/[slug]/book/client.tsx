@@ -3,20 +3,23 @@
 import BookingServiceDateInput from "@/components/BookingServiceDateInput";
 import BookingServiceMembersToggle from "@/components/BookingServiceMembersToggle";
 import BookingServiceSlots from "@/components/BookingServiceSlots";
+import { BookingService } from "@/lib/types";
 import {
   Alert,
   Avatar,
+  Box,
   Button,
   Card,
   Container,
+  Divider,
   Flex,
   Grid,
   GridCol,
   Group,
-  Divider,
+  List,
+  Modal,
   Stack,
   Text,
-  List,
 } from "@mantine/core";
 import {
   IconAlertCircle,
@@ -24,8 +27,7 @@ import {
   IconChevronRight,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { BookingService } from "@/lib/types";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function BookServiceClient({
   service,
@@ -51,6 +53,9 @@ function BookServiceClient({
 
   // State to track loaded slots
   const [loadedSlots, setLoadedSlots] = useState<string[]>([]);
+
+  // State for modal
+  const [availabilityModalOpened, setAvailabilityModalOpened] = useState(false);
 
   // Update URL parameters when they change
   useEffect(() => {
@@ -90,23 +95,58 @@ function BookServiceClient({
     setLoadedSlots(slots);
   };
 
-  // Now you have access to:
-  // - urlParams.employeeIds (URL employee IDs)
-  // - urlParams.date (URL date)
-  // - selectedSlot (selected slot)
-  // - loadedSlots (slots list)
-
-  // Example usage:
-  // console.log('URL date:', urlParams.date);
-  // console.log('URL employee IDs:', urlParams.employeeIds);
-  // console.log('Selected slot:', selectedSlot);
-  // console.log('Loaded slots:', loadedSlots);
-
   const hasAvailabilityError =
     !slotsLoading &&
     urlParams.employeeIds?.length &&
     urlParams.date &&
     loadedSlots.length === 0;
+
+  const TeamItem = () => (
+    <Group>
+      <Avatar src={service.team.avatarUrl}>
+        {service.team.name.slice(0, 2)}
+      </Avatar>
+      <div>
+        <Text fw={500}>{service.team.name}</Text>
+        <Text size="sm" c="dimmed">
+          {service.team.category}
+        </Text>
+      </div>
+    </Group>
+  );
+
+  const TeamAvailability = () => (
+    <>
+      <Text fw={500}>Business hours</Text>
+      <div>
+        {service.team.businessHours.map((availability) => (
+          <Text key={availability.id} size="sm" c="dimmed">
+            {new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(
+              new Date(2024, 0, availability.dayOfWeek)
+            )}
+            : {availability.openTime} - {availability.closeTime}
+          </Text>
+        ))}
+      </div>
+      <Divider />
+      <Text fw={500}>Member availability</Text>
+      {service.team.members.map((member) => (
+        <div key={member.id}>
+          <Text size="sm" fw={500}>
+            {member.user.name}
+          </Text>
+          {member.availability.map((availability) => (
+            <Text key={availability.id} size="sm" c="dimmed">
+              {new Intl.DateTimeFormat("en-US", {
+                weekday: "long",
+              }).format(new Date(2024, 0, availability.dayOfWeek))}
+              : {availability.startTime} - {availability.endTime}
+            </Text>
+          ))}
+        </div>
+      ))}
+    </>
+  );
 
   return (
     <Container py="xl" size="lg">
@@ -125,50 +165,16 @@ function BookServiceClient({
           display={{ base: "none", md: "block" }}
         >
           <Stack>
-            <Group>
-              <Avatar src={service.team.avatarUrl}>
-                {service.team.name.slice(0, 2)}
-              </Avatar>
-              <div>
-                <Text fw={500}>{service.team.name}</Text>
-                <Text size="sm" c="dimmed">
-                  {service.team.category}
-                </Text>
-              </div>
-            </Group>
+            <TeamItem />
             <Divider />
-            <Text fw={500}>Business hours</Text>
-            <div>
-              {service.team.businessHours.map((availability) => (
-                <Text key={availability.id} size="sm" c="dimmed">
-                  {new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(
-                    new Date(2024, 0, availability.dayOfWeek)
-                  )}
-                  : {availability.openTime} - {availability.closeTime}
-                </Text>
-              ))}
-            </div>
-            <Divider />
-            <Text fw={500}>Member availability</Text>
-            {service.team.members.map((member) => (
-              <div key={member.id}>
-                <Text size="sm" fw={500}>
-                  {member.user.name}
-                </Text>
-                {member.availability.map((availability) => (
-                  <Text key={availability.id} size="sm" c="dimmed">
-                    {new Intl.DateTimeFormat("en-US", {
-                      weekday: "long",
-                    }).format(new Date(2024, 0, availability.dayOfWeek))}
-                    : {availability.startTime} - {availability.endTime}
-                  </Text>
-                ))}
-              </div>
-            ))}
+            <TeamAvailability />
           </Stack>
         </GridCol>
         <GridCol span={{ base: 12, md: 8 }}>
           <Flex direction="column" gap="md">
+            <Box display={{ base: "block", md: "none" }}>
+              <TeamItem />
+            </Box>
             <Text fw={500}>Book service</Text>
             {!service.isActive && (
               <Alert
@@ -205,9 +211,19 @@ function BookServiceClient({
             </Card>
             <Flex direction="column" gap="md">
               <Flex direction="column" gap="md">
-                <Text fw={600} size="sm">
-                  Team member
-                </Text>
+                <Group wrap="nowrap">
+                  <Text fw={600} size="sm">
+                    Team member
+                  </Text>
+                  <Button
+                    variant="default"
+                    size="xs"
+                    display={{ base: "block", md: "none" }}
+                    onClick={() => setAvailabilityModalOpened(true)}
+                  >
+                    View availability
+                  </Button>
+                </Group>
                 {service.team.members.length > 0 ? (
                   <BookingServiceMembersToggle
                     members={service.team.members}
@@ -266,6 +282,26 @@ function BookServiceClient({
           </Flex>
         </GridCol>
       </Grid>
+
+      <Modal
+        opened={availabilityModalOpened}
+        onClose={() => setAvailabilityModalOpened(false)}
+        title="Team Availability"
+        size="md"
+      >
+        <Stack>
+          <TeamAvailability />
+          <Group justify="flex-end">
+            <Button
+              variant="default"
+              size="xs"
+              onClick={() => setAvailabilityModalOpened(false)}
+            >
+              Close
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Container>
   );
 }
