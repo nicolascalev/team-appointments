@@ -1,5 +1,6 @@
 "use client";
 
+import BookingServiceConfirm from "@/components/BookingServiceConfirm";
 import BookingServiceDateInput from "@/components/BookingServiceDateInput";
 import BookingServiceMembersToggle from "@/components/BookingServiceMembersToggle";
 import BookingServiceSlots from "@/components/BookingServiceSlots";
@@ -21,13 +22,14 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import {
-  IconAlertCircle,
-  IconChevronLeft,
-  IconChevronRight,
-} from "@tabler/icons-react";
+import { IconAlertCircle, IconChevronLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import moment from "moment";
+
+function prettyHour(hour: string) {
+  return moment(hour, "HH:mm").format("h:mm A");
+}
 
 function BookServiceClient({
   service,
@@ -124,7 +126,7 @@ function BookServiceClient({
             {new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(
               new Date(2024, 0, availability.dayOfWeek)
             )}
-            : {availability.openTime} - {availability.closeTime}
+            : {prettyHour(availability.openTime)} - {prettyHour(availability.closeTime)}
           </Text>
         ))}
       </div>
@@ -140,7 +142,7 @@ function BookServiceClient({
               {new Intl.DateTimeFormat("en-US", {
                 weekday: "long",
               }).format(new Date(2024, 0, availability.dayOfWeek))}
-              : {availability.startTime} - {availability.endTime}
+              : {prettyHour(availability.startTime)} - {prettyHour(availability.endTime)}
             </Text>
           ))}
         </div>
@@ -212,7 +214,7 @@ function BookServiceClient({
             <Flex direction="column" gap="md">
               <Flex direction="column" gap="md">
                 <Group wrap="nowrap">
-                  <Text fw={600} size="sm">
+                  <Text fw={500} size="sm">
                     Team member
                   </Text>
                   <Button
@@ -272,12 +274,13 @@ function BookServiceClient({
               </div>
             </Flex>
             <Group justify="flex-end" mt="xl">
-              <Button
-                rightSection={<IconChevronRight size={14} />}
-                disabled={!service.isActive || !selectedSlot}
-              >
-                Book
-              </Button>
+              <BookingServiceConfirm
+                service={service}
+                selectedSlot={selectedSlot}
+                selectedMembers={service.team.members.filter((m) =>
+                  urlParams.employeeIds?.includes(m.id)
+                )}
+              />
             </Group>
           </Flex>
         </GridCol>

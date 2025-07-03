@@ -69,7 +69,12 @@ function MembersToggle({
               <IconCheck size={14} color="white" />
             </Box>
           )}
-          <Avatar>{member.user.name?.charAt(0)}</Avatar>
+          <Avatar
+            src={member.user.avatarUrl || undefined}
+            alt={member.user.name || ""}
+          >
+            {member.user.name?.charAt(0)}
+          </Avatar>
           <Text fw={500} size="sm" truncate="end" ta="center" w={100} maw={100}>
             {member.user.name}
           </Text>

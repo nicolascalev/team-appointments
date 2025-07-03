@@ -45,3 +45,11 @@ export const teamSettingsSchema = z.object({
 export const memberBioSchema = z.object({
   bio: z.string().max(100, "Bio must be 100 characters or less").optional(),
 });
+
+export const bookingSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  serviceId: z.string().min(1, "Service is required"),
+  employeeIds: z.array(z.string()).min(1, "At least one employee must be selected"),
+  timeSlot: z.string().min(1, "Time slot is required"),
+});
