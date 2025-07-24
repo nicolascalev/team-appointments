@@ -16,6 +16,7 @@ import { getCurrentUser } from "@/actions/auth";
 import { formatDateLong } from "@/lib/utils";
 import UserInvite from "@/components/UserInvite";
 import { IconArrowUpRight } from "@tabler/icons-react";
+import ServicesDrawer from "@/components/ServicesDrawer";
 
 async function TeamPage() {
   const user = await getCurrentUser();
@@ -88,6 +89,17 @@ async function TeamPage() {
           <Text c="dimmed">These are the times you are scheduled to work</Text>
         </div>
         <div className="flex flex-col gap-4">
+          <div>
+            <Text fw={500} mb="xs">
+              Your assigned services
+            </Text>
+            {currentTeamMember?.services &&
+            currentTeamMember?.services.length > 0 ? (
+              <ServicesDrawer services={currentTeamMember?.services} />
+            ) : (
+              <Text c="dimmed">No services assigned</Text>
+            )}
+          </div>
           <div>
             <Text fw={500}>Your schedule</Text>
             {userIsOnSchedule ? (

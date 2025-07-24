@@ -24,8 +24,8 @@ import Logo from "@/components/Logo";
 const links = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Team", href: "/team" },
-  { label: "Admin settings", href: "/admin" },
   { label: "Admin dashboard", href: "/admin/dashboard" },
+  { label: "Admin settings", href: "/admin" },
 ];
 
 export default function LayoutClient({
@@ -90,7 +90,7 @@ export default function LayoutClient({
                 </Button>
                 <Menu trigger="hover" position="bottom-start">
                   <Menu.Target>
-                    <Button variant="subtle" size="sm" c="inherit">
+                    <Button variant="subtle" size="sm" c="inherit" component={Link} href="/admin/dashboard">
                       Admin
                     </Button>
                   </Menu.Target>

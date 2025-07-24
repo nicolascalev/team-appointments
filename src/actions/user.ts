@@ -59,6 +59,7 @@ export async function getUserTeamPageData() {
                   start: "asc",
                 },
               },
+              services: true,
             },
           },
         },
