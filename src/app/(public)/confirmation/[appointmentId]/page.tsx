@@ -1,8 +1,8 @@
 import { getAppointment } from "@/actions/appointment";
+import AppointmentCancelPopover from "@/components/AppointmentCancelPopover";
 import {
   Anchor,
   Avatar,
-  Button,
   Card,
   Container,
   Group,
@@ -10,10 +10,10 @@ import {
   Text,
   ThemeIcon,
 } from "@mantine/core";
-import { IconCheck, IconTrash } from "@tabler/icons-react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import moment from "moment";
 import { notFound } from "next/navigation";
-import React from "react";
+import { AppointmentStatus } from "../../../../../prisma/generated";
 
 async function AppointmentConfirmationPage({
   params,
@@ -31,12 +31,26 @@ async function AppointmentConfirmationPage({
     <Container size="sm" py="xl">
       <Stack>
         <Group justify="center">
-          <ThemeIcon color="teal" size="xl" radius="xl">
-            <IconCheck size={24} />
+          <ThemeIcon
+            color={
+              appointment.status === AppointmentStatus.CANCELLED
+                ? "red"
+                : "teal"
+            }
+            size="xl"
+            radius="xl"
+          >
+            {appointment.status === AppointmentStatus.CANCELLED ? (
+              <IconX size={24} />
+            ) : (
+              <IconCheck size={24} />
+            )}
           </ThemeIcon>
         </Group>
         <Text ta="center" fw={500} size="lg">
-          Appointment confirmed
+          {appointment.status === AppointmentStatus.CANCELLED
+            ? "Appointment cancelled"
+            : "Appointment confirmed"}
         </Text>
         <Text ta="center" size="sm">
           You will receive an email confirmation shortly.
@@ -117,13 +131,10 @@ async function AppointmentConfirmationPage({
                 "The cancellation policy is not set for this team."}
             </Text>
             <div>
-              <Button
-                color="red"
-                variant="light"
-                leftSection={<IconTrash size={14} />}
-              >
-                Cancel appointment
-              </Button>
+              <AppointmentCancelPopover
+                appointmentId={appointmentId}
+                appointmentStatus={appointment.status}
+              />
             </div>
           </Stack>
         </Card>
