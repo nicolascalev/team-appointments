@@ -1,12 +1,21 @@
 "use client";
 
 import { Avatar, Text, Flex, Group, Box } from "@mantine/core";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IconCheck } from "@tabler/icons-react";
 import type { Team } from "../../prisma/generated";
 
-function TeamsToggle({ teams }: { teams: Team[] }) {
-  const [selectedTeams, setSelectedTeams] = useState<Team[]>([]);
+function TeamsToggle({
+  teams,
+  initialSelectedTeams,
+  onChange,
+}: {
+  teams: Team[];
+  initialSelectedTeams: Team[];
+  onChange: (teams: Team[]) => void;
+}) {
+  const [selectedTeams, setSelectedTeams] =
+    useState<Team[]>(initialSelectedTeams);
 
   const toggleTeam = (team: Team) => {
     setSelectedTeams((prev) => {
@@ -19,8 +28,18 @@ function TeamsToggle({ teams }: { teams: Team[] }) {
     });
   };
 
+  useEffect(() => {
+    onChange(selectedTeams);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTeams]);
+
   return (
     <Group>
+      {teams.length === 0 && (
+        <Text c="dimmed" size="sm">
+          No teams found, you need to join or create a team first.
+        </Text>
+      )}
       {teams.map((team) => (
         <Flex
           direction="column"
@@ -54,7 +73,7 @@ function TeamsToggle({ teams }: { teams: Team[] }) {
               <IconCheck size={14} color="white" />
             </Box>
           )}
-          <Avatar>{team.name.charAt(0)}</Avatar>
+          <Avatar src={team.avatarUrl}>{team.name.charAt(0)}</Avatar>
           <Text fw={500} size="sm" truncate="end" ta="center" w={100} maw={100}>
             {team.name}
           </Text>

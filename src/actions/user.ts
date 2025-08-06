@@ -253,3 +253,31 @@ export async function rejectInvite(inviteId: string) {
   revalidatePath("/team");
   return { data: deletedInvite, error: null };
 }
+
+// list user teams
+export async function getUserTeams() {
+  const { data: user, error: getCurrentUserError } = await tryCatch(
+    getCurrentUser()
+  );
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  const { data: teams, error: teamsError } = await tryCatch(
+    prisma.team.findMany({
+      where: {
+        members: {
+          some: {
+            userId: user.id,
+          },
+        },
+      },
+    })
+  );
+
+  if (teamsError) {
+    return { data: null, error: "Failed to load teams" };
+  }
+
+  return { data: teams, error: null };
+}

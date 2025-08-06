@@ -116,3 +116,20 @@ export type BookingService = Prisma.ServiceGetPayload<{
     };
   };
 }>;
+
+export type AppointmentFull = Prisma.AppointmentGetPayload<{
+  include: {
+    team: {
+      include: {
+        settings: true;
+      };
+    };
+    teamMember: {
+      include: {
+        user: true;
+      };
+    };
+    service: true;
+    user: true; // Client information
+  };
+}>;
