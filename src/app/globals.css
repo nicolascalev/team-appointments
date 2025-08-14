@@ -3,3 +3,12 @@
 body {
   font-family: var(--font-inter);
 }
+
+@keyframes scroll-left-to-right {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
