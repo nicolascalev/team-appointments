@@ -1,4 +1,6 @@
+import SectionBlog from "@/components/landing/SectionBlog";
 import SectionComparison from "@/components/landing/SectionComparison";
+import SectionFAQ from "@/components/landing/SectionFAQ";
 import SectionFeatures from "@/components/landing/SectionFeatures";
 import SectionHero from "@/components/landing/SectionHero";
 import SectionMovingBanner from "@/components/landing/SectionMovingBanner";
@@ -19,6 +21,9 @@ export default function Home() {
       <SectionFeatures />
       <SectionComparison />
       <SectionSteps />
+      <SectionBlog />
+      <SectionMovingBanner />
+      <SectionFAQ />
     </div>
   );
 }

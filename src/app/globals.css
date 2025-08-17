@@ -12,3 +12,7 @@ body {
     transform: translateX(-100%);
   }
 }
+
+.home-accordion .mantine-Accordion-control:hover {
+  background: #ded8ce;
+}
