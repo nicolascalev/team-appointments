@@ -148,7 +148,7 @@ function SectionComparison() {
               <Title order={3} fw={500} c="white">
                 You in?
               </Title>
-              <Button color="dark">Get Started</Button>
+              <Button color="dark.8">Get Started</Button>
             </Group>
           </Card>
         </div>
