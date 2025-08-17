@@ -1,5 +1,6 @@
 import {
   Avatar,
+  BackgroundImage,
   Box,
   Button,
   Card,
@@ -134,7 +135,7 @@ function SectionFeatures() {
         </Stack>
       </Container>
       <Box p="md">
-        <Card bg="dark.9" w="100%" mih={400} p={{ md: "xl"}}>
+        <BackgroundImage src="/landing/demo-bg.webp" radius="md" w="100%" mih={400} p={{ md: "xl"}}>
           <Group mt="200px" align="end">
             <Stack maw={400}>
               <Text c="white" className="!text-lg md:!text-2xl">
@@ -162,7 +163,7 @@ function SectionFeatures() {
               </Button>
             </div>
           </Group>
-        </Card>
+        </BackgroundImage>
       </Box>
     </div>
   );

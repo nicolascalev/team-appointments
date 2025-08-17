@@ -14,6 +14,11 @@ import { IconDownload } from "@tabler/icons-react";
 function SectionHero() {
   return (
     <Container size="xl" py={{ base: "4rem", sm: "6rem" }}>
+      <div className="flex justify-center mb-4">
+        <Card withBorder py="4px" px="8px" radius="xl">
+          <Text size="xs">🎉 Exciting news! Teamlypro is now available for free!</Text>
+        </Card>
+      </div>
       <SimpleGrid cols={{ base: 1, sm: 2 }}>
         <Stack justify="center">
           <Text c="dimmed" size="sm" ta={{ base: "center", sm: "left" }}>
