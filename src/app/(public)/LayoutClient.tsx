@@ -10,6 +10,7 @@ import {
   Group,
   Menu,
 } from "@mantine/core";
+import Footer from "@/components/landing/Footer";
 import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,11 +45,7 @@ export default function LayoutClient({
       padding="md"
     >
       <AppShell.Header>
-        <Container
-          h="100%"
-          className="flex items-center"
-          size="xl"
-        >
+        <Container h="100%" className="flex items-center" size="xl">
           <Group
             h="100%"
             gap="md"
@@ -129,6 +126,7 @@ export default function LayoutClient({
       <AppShell.Main p="0px" pt="60px">
         {children}
       </AppShell.Main>
+      <Footer />
     </AppShell>
   );
 }

@@ -1,4 +1,3 @@
-import Footer from "@/components/landing/Footer";
 import SectionBlog from "@/components/landing/SectionBlog";
 import SectionComparison from "@/components/landing/SectionComparison";
 import SectionFAQ from "@/components/landing/SectionFAQ";
@@ -20,7 +19,6 @@ export default function Home() {
       <SectionBlog />
       <SectionMovingBanner />
       <SectionFAQ />
-      <Footer />
     </div>
   );
 }
