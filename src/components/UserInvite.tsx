@@ -76,7 +76,7 @@ function UserInvite({ invite }: { invite: InviteWithTeam }) {
 
   return (
     <Group align="flex-start" wrap="nowrap">
-      <Avatar color="teal" src={invite.team.avatarUrl}>
+      <Avatar color="indigo" src={invite.team.avatarUrl}>
         {invite.team.name.charAt(0)}
       </Avatar>
       <div className="flex flex-col gap-2 grow">
@@ -117,7 +117,7 @@ function UserInvite({ invite }: { invite: InviteWithTeam }) {
                 >
                   No
                 </Button>
-                <Button color="teal" onClick={handleAccept} loading={isLoading}>
+                <Button color="indigo" onClick={handleAccept} loading={isLoading}>
                   Yes
                 </Button>
               </Group>

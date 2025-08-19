@@ -50,7 +50,7 @@ function BookingServicesList({
               {service.category && (
                 <>
                   <br />
-                  <Text component="span" size="xs" c="teal">
+                  <Text component="span" size="xs" c="indigo">
                     {service.category}
                   </Text>
                 </>

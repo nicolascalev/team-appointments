@@ -58,7 +58,7 @@ function MembersToggle({
                 position: "absolute",
                 top: -4,
                 right: -4,
-                backgroundColor: "var(--mantine-color-teal-6)",
+                backgroundColor: "var(--mantine-color-indigo-6)",
                 borderRadius: "50%",
                 padding: "3px",
                 display: "flex",

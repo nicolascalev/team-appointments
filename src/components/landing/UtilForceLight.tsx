@@ -2,14 +2,15 @@
 
 import { useMantineColorScheme } from "@mantine/core";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
+
+const lightPaths = ["/"];
 
 function UtilForceLight() {
   const { setColorScheme } = useMantineColorScheme();
 
   const pathname = usePathname();
 
-  const lightPaths = useMemo(() => ["/"], []);
   useEffect(() => {
     if (lightPaths.includes(pathname)) {
       setColorScheme("light");
@@ -19,7 +20,8 @@ function UtilForceLight() {
     return () => {
       setColorScheme("auto");
     };
-  }, [pathname, setColorScheme, lightPaths]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, lightPaths]);
 
   return null;
 }

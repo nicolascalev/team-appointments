@@ -145,7 +145,7 @@ export default function LayoutClient({
           <Menu>
             <Menu.Target>
               <Group style={{ cursor: "pointer" }}>
-                <Avatar color="teal">
+                <Avatar color="indigo">
                   {currentUser.name?.charAt(0) || "U"}
                 </Avatar>
                 <Text>{currentUser.name}</Text>

@@ -143,7 +143,7 @@ function SectionComparison() {
           </SimpleGrid>
         </div>
         <div className="flex justify-center w-full -mt-1">
-          <Card bg="teal.7" p="lg" w="100%" maw={600}>
+          <Card bg="indigo.7" p="lg" w="100%" maw={600}>
             <Group justify="center">
               <Title order={3} fw={500} c="white">
                 You in?

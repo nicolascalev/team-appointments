@@ -11,7 +11,7 @@ import UtilForceLight from "@/components/landing/UtilForceLight";
 export default function Home() {
   return (
     <div>
-      {/* <UtilForceLight /> */}
+      <UtilForceLight />
       <SectionHero />
       <SectionMovingBanner />
       <SectionFeatures />

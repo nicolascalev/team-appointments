@@ -41,7 +41,7 @@ async function AdminPage({
     <Container size="md" p={0}>
       <div>
         <Group mb="xl" mt="md" align="flex-start">
-          <Avatar color="teal" src={team.avatarUrl}>
+          <Avatar color="indigo" src={team.avatarUrl}>
             {team.name.slice(0, 2)}
           </Avatar>
           <div>

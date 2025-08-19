@@ -18,31 +18,31 @@ function SectionMovingBanner() {
           // width: "fit-content"
         }}
       >
-        <ThemeIcon color="teal" size="xl">
+        <ThemeIcon color="indigo" size="xl">
           <IconCheck size={24} />
         </ThemeIcon>
         <Text c="white" fw={500} size="24px" style={{ whiteSpace: "nowrap" }}>
           Teamlypro is a platform that helps you manage your team.
         </Text>
-        <ThemeIcon color="teal" size="xl">
+        <ThemeIcon color="indigo" size="xl">
           <IconCheck size={24} />
         </ThemeIcon>
         <Text c="white" fw={500} size="24px" style={{ whiteSpace: "nowrap" }}>
           Teamlypro is a platform that helps you manage your team.
         </Text>
-        <ThemeIcon color="teal" size="xl">
+        <ThemeIcon color="indigo" size="xl">
           <IconCheck size={24} />
         </ThemeIcon>
         <Text c="white" fw={500} size="24px" style={{ whiteSpace: "nowrap" }}>
           Teamlypro is a platform that helps you manage your team.
         </Text>
-        <ThemeIcon color="teal" size="xl">
+        <ThemeIcon color="indigo" size="xl">
           <IconCheck size={24} />
         </ThemeIcon>
         <Text c="white" fw={500} size="24px" style={{ whiteSpace: "nowrap" }}>
           Teamlypro is a platform that helps you manage your team.
         </Text>
-        <ThemeIcon color="teal" size="xl">
+        <ThemeIcon color="indigo" size="xl">
           <IconCheck size={24} />
         </ThemeIcon>
         <Text c="white" fw={500} size="24px" style={{ whiteSpace: "nowrap" }}>

@@ -51,7 +51,7 @@ function SectionHero() {
               </Stack>
             </Card>
           </SimpleGrid>
-          <Card bg="teal.7" p="xl" mt="xs">
+          <Card bg="indigo.7" p="xl" mt="xs">
             <Center>
               <Button color="dark.9" leftSection={<IconDownload size={16} />}>
                 Export data from this month

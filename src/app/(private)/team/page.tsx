@@ -146,7 +146,7 @@ async function TeamPage() {
             <>
               {data.teams.map((team) => (
                 <Group key={team.id}>
-                  <Avatar color="teal" src={team.avatarUrl}>
+                  <Avatar color="indigo" src={team.avatarUrl}>
                     {team.name.charAt(0)}
                   </Avatar>
                   <Text>{team.name}</Text>

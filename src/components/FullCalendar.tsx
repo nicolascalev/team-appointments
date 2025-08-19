@@ -112,7 +112,7 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
                   <Anchor size="xs">Appointments</Anchor>
                   <IconChevronRight
                     size={12}
-                    color="var(--mantine-color-teal-6)"
+                    color="var(--mantine-color-indigo-6)"
                   />
                 </Group>
                 <ActionIcon variant="light" size="xs" hiddenFrom="sm" mt="xs">

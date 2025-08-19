@@ -20,7 +20,7 @@ const inter = Inter({
 });
 
 const theme = createTheme({
-  primaryColor: "teal",
+  primaryColor: "indigo",
   fontFamily: inter.style.fontFamily,
 });
 

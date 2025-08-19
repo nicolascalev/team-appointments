@@ -126,7 +126,7 @@ export default function RegisterPage() {
               variant="subtle"
               size="sm"
               onClick={() => router.push("/login")}
-              color="teal"
+              color="indigo"
             >
               Login
             </Button>
