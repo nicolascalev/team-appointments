@@ -21,6 +21,9 @@ import {
 import { useState } from "react";
 import { Team } from "../../prisma/generated";
 import { useAppointments } from "@/lib/useAppointments";
+import { useDisclosure } from "@mantine/hooks";
+import CalendarDayDrawer from "./CalendarDayDrawer";
+import { AppointmentFull } from "@/lib/types";
 
 interface FullCalendarProps {
   selectedTeams: Team[];
@@ -53,6 +56,24 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
         format(date, "yyyy-MM-dd")
     );
   };
+
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [filteredAppointments, setFilteredAppointments] = useState<
+    AppointmentFull[]
+  >([]);
+  const [dayDrawerOpened, { open: openDayDrawer, close: closeDayDrawer }] =
+    useDisclosure(false);
+  function handleDayClick(day: Date) {
+    setSelectedDay(day);
+    setFilteredAppointments(
+      appointmentsData?.filter(
+        (appointment) =>
+          format(new Date(appointment.start), "yyyy-MM-dd") ===
+          format(day, "yyyy-MM-dd")
+      ) || []
+    );
+    openDayDrawer();
+  }
 
   return (
     <Box>
@@ -97,34 +118,65 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
               )}
             </div>
             {hasEventsOnDay(day) && (
-              <>
-                <Text size="xs" mb="xs" truncate="end" visibleFrom="sm">
-                  {
-                    appointmentsData?.filter(
-                      (appointment) =>
-                        format(new Date(appointment.start), "yyyy-MM-dd") ===
-                        format(day, "yyyy-MM-dd")
-                    ).length
-                  }{" "}
-                  appointments
-                </Text>
-                <Group wrap="nowrap" visibleFrom="sm" gap="2">
-                  <Anchor size="xs">Appointments</Anchor>
-                  <IconChevronRight
-                    size={12}
-                    color="var(--mantine-color-indigo-6)"
-                  />
-                </Group>
-                <ActionIcon variant="light" size="xs" hiddenFrom="sm" mt="xs">
-                  <IconChevronRight size={14} />
-                </ActionIcon>
-              </>
+              <Day
+                day={day}
+                appointmentsData={appointmentsData}
+                handleDayClick={handleDayClick}
+              />
             )}
           </Card>
         ))}
       </div>
+      <CalendarDayDrawer
+        opened={dayDrawerOpened}
+        onClose={closeDayDrawer}
+        appointments={filteredAppointments}
+        selectedDay={selectedDay ?? undefined}
+      />
     </Box>
   );
 }
 
 export default FullCalendar;
+
+function Day({
+  day,
+  appointmentsData,
+  handleDayClick,
+}: {
+  day: Date;
+  appointmentsData?: AppointmentFull[];
+  handleDayClick: (day: Date) => void;
+}) {
+  const filteredAppointments = appointmentsData?.filter(
+    (appointment) =>
+      format(new Date(appointment.start), "yyyy-MM-dd") ===
+      format(day, "yyyy-MM-dd")
+  );
+  return (
+    <>
+      <Text size="xs" mb="xs" truncate="end" visibleFrom="sm">
+        {filteredAppointments?.length}
+        {filteredAppointments?.length === 1 ? " event" : " events"}
+      </Text>
+      <Group
+        wrap="nowrap"
+        visibleFrom="sm"
+        gap="2"
+        onClick={() => handleDayClick(day)}
+      >
+        <Anchor size="xs">Events</Anchor>
+        <IconChevronRight size={12} color="var(--mantine-color-indigo-6)" />
+      </Group>
+      <ActionIcon
+        variant="light"
+        size="xs"
+        hiddenFrom="sm"
+        mt="xs"
+        onClick={() => handleDayClick(day)}
+      >
+        <IconChevronRight size={14} />
+      </ActionIcon>
+    </>
+  );
+}
