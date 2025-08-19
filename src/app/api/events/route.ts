@@ -1,4 +1,4 @@
-import { getTeamsAppointmentsMonth } from "@/actions/appointment";
+import { getTeamsEventsMonth } from "@/actions/appointment";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { data, error } = await getTeamsAppointmentsMonth(teams, date);
+  const { data, error } = await getTeamsEventsMonth(teams, date);
 
   if (error) {
     return NextResponse.json({ error }, { status: 400 });

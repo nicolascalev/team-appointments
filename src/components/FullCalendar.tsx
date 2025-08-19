@@ -20,10 +20,10 @@ import {
 } from "date-fns";
 import { useState } from "react";
 import { Team } from "../../prisma/generated";
-import { useAppointments } from "@/lib/useAppointments";
+import { useEvents } from "@/lib/useEvents";
 import { useDisclosure } from "@mantine/hooks";
 import CalendarDayDrawer from "./CalendarDayDrawer";
-import { AppointmentFull } from "@/lib/types";
+import { AppointmentFull, EventFull } from "@/lib/types";
 
 interface FullCalendarProps {
   selectedTeams: Team[];
@@ -44,17 +44,23 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
     setCurrentDate(addMonths(currentDate, 1));
   };
 
-  const { appointments: appointmentsData, appointmentsLoading } =
-    useAppointments(
+  const { events: eventsData, eventsLoading } =
+    useEvents(
       selectedTeams.map((team) => team.id),
       format(currentDate, "yyyy-MM-dd")
     );
   const hasEventsOnDay = (date: Date) => {
-    return appointmentsData?.some(
+    const hasAppointments = eventsData?.appointments?.some(
       (appointment) =>
         format(new Date(appointment.start), "yyyy-MM-dd") ===
         format(date, "yyyy-MM-dd")
     );
+    const hasBlockOffs = eventsData?.blockOffs?.some(
+      (blockOff) =>
+        format(new Date(blockOff.start), "yyyy-MM-dd") ===
+        format(date, "yyyy-MM-dd")
+    );
+    return hasAppointments || hasBlockOffs;
   };
 
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -63,12 +69,20 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
   >([]);
   const [dayDrawerOpened, { open: openDayDrawer, close: closeDayDrawer }] =
     useDisclosure(false);
+  const [filteredBlockOffs, setFilteredBlockOffs] = useState<EventFull[]>([]);
   function handleDayClick(day: Date) {
     setSelectedDay(day);
     setFilteredAppointments(
-      appointmentsData?.filter(
+      eventsData?.appointments?.filter(
         (appointment) =>
           format(new Date(appointment.start), "yyyy-MM-dd") ===
+          format(day, "yyyy-MM-dd")
+      ) || []
+    );
+    setFilteredBlockOffs(
+      eventsData?.blockOffs?.filter(
+        (blockOff) =>
+          format(new Date(blockOff.start), "yyyy-MM-dd") ===
           format(day, "yyyy-MM-dd")
       ) || []
     );
@@ -91,7 +105,7 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
 
       <div className="grid grid-cols-7 gap-0 relative">
         <LoadingOverlay
-          visible={appointmentsLoading}
+          visible={eventsLoading}
           zIndex={10}
           overlayProps={{ radius: "sm", blur: 2 }}
         />
@@ -120,7 +134,7 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
             {hasEventsOnDay(day) && (
               <Day
                 day={day}
-                appointmentsData={appointmentsData}
+                eventsData={eventsData}
                 handleDayClick={handleDayClick}
               />
             )}
@@ -131,6 +145,7 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
         opened={dayDrawerOpened}
         onClose={closeDayDrawer}
         appointments={filteredAppointments}
+        blockOffs={filteredBlockOffs}
         selectedDay={selectedDay ?? undefined}
       />
     </Box>
@@ -141,23 +156,34 @@ export default FullCalendar;
 
 function Day({
   day,
-  appointmentsData,
+  eventsData,
   handleDayClick,
 }: {
   day: Date;
-  appointmentsData?: AppointmentFull[];
+  eventsData?: {
+    appointments: AppointmentFull[];
+    blockOffs: EventFull[];
+  };
   handleDayClick: (day: Date) => void;
 }) {
-  const filteredAppointments = appointmentsData?.filter(
+  const filteredAppointments = eventsData?.appointments?.filter(
     (appointment) =>
       format(new Date(appointment.start), "yyyy-MM-dd") ===
       format(day, "yyyy-MM-dd")
   );
+  const filteredBlockOffs = eventsData?.blockOffs?.filter(
+    (blockOff) =>
+      format(new Date(blockOff.start), "yyyy-MM-dd") ===
+      format(day, "yyyy-MM-dd")
+  );
+  const totalEvents = (filteredAppointments?.length || 0) + (filteredBlockOffs?.length || 0);
   return (
     <>
       <Text size="xs" mb="xs" truncate="end" visibleFrom="sm">
-        {filteredAppointments?.length}
-        {filteredAppointments?.length === 1 ? " event" : " events"}
+        {totalEvents}
+        {totalEvents === 1
+          ? " event"
+          : " events"}
       </Text>
       <Group
         wrap="nowrap"

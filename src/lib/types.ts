@@ -133,3 +133,14 @@ export type AppointmentFull = Prisma.AppointmentGetPayload<{
     user: true; // Client information
   };
 }>;
+
+export type EventFull = Prisma.EmployeeBlockOffGetPayload<{
+  include: {
+    teamMember: {
+      include: {
+        team: true;
+        user: true;
+      };
+    };
+  };
+}>;

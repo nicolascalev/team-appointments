@@ -46,7 +46,7 @@ export async function cancelAppointment(appointmentId: string) {
   return { data: appointment, error };
 }
 
-export async function getTeamsAppointmentsMonth(teams: string[], date: string) {
+export async function getTeamsEventsMonth(teams: string[], date: string) {
   // Get current user
   const { data: currentUser, error: userError } = await tryCatch(getCurrentUser());
   if (userError || !currentUser) {
@@ -123,5 +123,40 @@ export async function getTeamsAppointmentsMonth(teams: string[], date: string) {
     return { data: null, error: appointmentsError };
   }
 
-  return { data: appointments, error: null };
+  // Get blocks off for the current user in the selected teams for the month
+  const { data: blockOffs, error: blockOffsError } = await tryCatch(
+    prisma.employeeBlockOff.findMany({
+      where: {
+        teamMemberId: { in: userTeamMemberIds },
+        start: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+      include: {
+        teamMember: {
+          include: {
+            team: true,
+            user: true,
+          },
+        },
+      },
+      orderBy: {
+        start: 'asc',
+      },
+    })
+  );
+
+  if (blockOffsError) {
+    return { data: null, error: blockOffsError };
+  }
+
+  // Return both appointments and block offs
+  return { 
+    data: { 
+      appointments, 
+      blockOffs 
+    }, 
+    error: null 
+  };
 }

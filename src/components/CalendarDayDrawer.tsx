@@ -1,5 +1,5 @@
 "use client";
-import { AppointmentFull } from "@/lib/types";
+import { AppointmentFull, EventFull } from "@/lib/types";
 import { Accordion, Drawer, Group, Stack, Text } from "@mantine/core";
 import moment from "moment";
 
@@ -7,14 +7,16 @@ function CalendarDayDrawer({
   opened,
   onClose,
   appointments,
+  blockOffs,
   selectedDay,
 }: {
   opened: boolean;
   onClose: () => void;
   appointments?: AppointmentFull[];
+  blockOffs?: EventFull[];
   selectedDay?: Date;
 }) {
-  if (!appointments) return null;
+  if (!appointments && !blockOffs) return null;
   return (
     <Drawer
       opened={opened}
@@ -25,6 +27,7 @@ function CalendarDayDrawer({
       position="right"
     >
       <div>
+        {appointments && (
         <Accordion
           styles={{
             control: {
@@ -60,6 +63,12 @@ function CalendarDayDrawer({
                 <Stack gap="xs">
                   <div>
                     <Text size="xs" c="dimmed">
+                      Team
+                    </Text>
+                    <Text size="sm">{appointment.team.name}</Text>
+                  </div>
+                  <div>
+                    <Text size="xs" c="dimmed">
                       Service
                     </Text>
                     <Text size="sm">{appointment.service.name}</Text>
@@ -82,7 +91,18 @@ function CalendarDayDrawer({
               </Accordion.Panel>
             </Accordion.Item>
           ))}
-        </Accordion>
+        </Accordion>)}
+        {blockOffs && (
+          <Stack>
+            {blockOffs.map((blockOff) => (
+              <div key={blockOff.id}>
+                <Text size="sm">{blockOff.teamMember.user.name}</Text>
+                <Text size="sm">{blockOff.reason}</Text>
+                <Text size="sm">{moment(blockOff.start).format("h:mm A")} - {moment(blockOff.end).format("h:mm A")}</Text>
+              </div>
+            ))}
+          </Stack>
+        )}
       </div>
     </Drawer>
   );
