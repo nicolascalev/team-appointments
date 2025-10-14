@@ -45,3 +45,9 @@ export function getDurationInMinutes(
       return amount;
   }
 }
+
+const cmsBaseUrl =
+  process.env.NEXT_PUBLIC_CMS_BASE_URL || "https://teamlypro-cms.vercel.app";
+export function getCmsImageUrl(url: string) {
+  return `${cmsBaseUrl}${url}`;
+}

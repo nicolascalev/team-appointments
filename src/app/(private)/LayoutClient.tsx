@@ -17,7 +17,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { User } from "../../../prisma/generated/client";
 import { logout } from "@/actions/auth";
-import { IconLogout } from "@tabler/icons-react";
+import { IconLogout, IconUser } from "@tabler/icons-react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 
@@ -53,7 +53,11 @@ export default function LayoutClient({
       padding="md"
     >
       <AppShell.Header>
-        <Container p={{ base: "md", md: 0 }} h="100%" className="flex items-center">
+        <Container
+          p={{ base: "md", md: 0 }}
+          h="100%"
+          className="flex items-center"
+        >
           <Group
             h="100%"
             gap="md"
@@ -90,7 +94,13 @@ export default function LayoutClient({
                 </Button>
                 <Menu trigger="hover" position="bottom-start">
                   <Menu.Target>
-                    <Button variant="subtle" size="sm" c="inherit" component={Link} href="/admin/dashboard">
+                    <Button
+                      variant="subtle"
+                      size="sm"
+                      c="inherit"
+                      component={Link}
+                      href="/admin/dashboard"
+                    >
                       Admin
                     </Button>
                   </Menu.Target>
@@ -107,11 +117,18 @@ export default function LayoutClient({
             </Group>
             <Menu position="bottom-end">
               <Menu.Target>
-                <Avatar style={{ cursor: "pointer" }} visibleFrom="sm">
+                <Avatar style={{ cursor: "pointer" }} visibleFrom="sm" src={currentUser.avatarUrl}>
                   {currentUser.name?.charAt(0) || "U"}
                 </Avatar>
               </Menu.Target>
               <Menu.Dropdown miw={200}>
+                <Menu.Item
+                  leftSection={<IconUser size={14} />}
+                  component={Link}
+                  href="/profile"
+                >
+                  Profile
+                </Menu.Item>
                 <Menu.Item
                   color="red"
                   leftSection={<IconLogout size={14} />}
@@ -145,7 +162,7 @@ export default function LayoutClient({
           <Menu>
             <Menu.Target>
               <Group style={{ cursor: "pointer" }}>
-                <Avatar color="indigo">
+                <Avatar color="indigo" src={currentUser.avatarUrl}>
                   {currentUser.name?.charAt(0) || "U"}
                 </Avatar>
                 <Text>{currentUser.name}</Text>

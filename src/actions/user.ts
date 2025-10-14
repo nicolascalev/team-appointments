@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "./auth";
 import { tryCatch } from "@/lib/try-catch";
 import { revalidatePath } from "next/cache";
+import { uploadFiles } from "@/lib/file-uploads";
+import { updateUserProfileSchema } from "@/lib/validation-schemas";
 
 export async function getUserTeamPageData() {
   const { data: user, error: getCurrentUserError } = await tryCatch(
@@ -280,4 +282,82 @@ export async function getUserTeams() {
   }
 
   return { data: teams, error: null };
+}
+
+export async function updateUserProfile(data: {
+  name?: string;
+  email?: string;
+  phone?: string;
+  avatar?: File;
+}) {
+  const { data: user, error: getCurrentUserError } = await tryCatch(
+    getCurrentUser()
+  );
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  const validatedData = updateUserProfileSchema.safeParse(data);
+  if (!validatedData.success) {
+    return { data: null, error: "Invalid data" };
+  }
+
+  // If email is being updated, check if it's already taken
+  if (data.email && data.email !== user.email) {
+    const { data: existingUser, error: existingUserError } = await tryCatch(
+      prisma.user.findUnique({
+        where: { email: data.email },
+      })
+    );
+
+    if (existingUserError) {
+      return { data: null, error: "Failed to check email availability" };
+    }
+
+    if (existingUser) {
+      return { data: null, error: "Email already taken" };
+    }
+  }
+
+  let avatarUrl = undefined;
+  if (data.avatar) {
+    const { data: uploadedAvatar, error: uploadFilesError } = await tryCatch(
+      uploadFiles([data.avatar])
+    );
+    if (uploadFilesError || !uploadedAvatar) {
+      return { data: null, error: "Failed to upload avatar" };
+    }
+    avatarUrl = uploadedAvatar[0];
+  }
+
+  const updateData: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    avatarUrl?: string;
+  } = {};
+
+  if (data.name) updateData.name = data.name;
+  if (data.email) updateData.email = data.email;
+  if (data.phone !== undefined) updateData.phone = data.phone;
+  if (avatarUrl) updateData.avatarUrl = avatarUrl;
+
+  const { data: updatedUser, error: updateUserError } = await tryCatch(
+    prisma.user.update({
+      where: { id: user.id },
+      data: updateData,
+    })
+  );
+
+  if (updateUserError) {
+    return { data: null, error: "Failed to update user profile" };
+  }
+
+  // Remove password from response
+  if (updatedUser) {
+    updatedUser.password = "";
+  }
+
+  revalidatePath("/profile");
+  return { data: updatedUser, error: null };
 }

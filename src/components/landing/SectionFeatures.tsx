@@ -136,7 +136,7 @@ function SectionFeatures() {
       </Container>
       <Box p="md">
         <BackgroundImage src="/landing/demo-bg.webp" radius="md" w="100%" mih={400} p={{ md: "xl"}}>
-          <Group mt="200px" align="end">
+          <Group align="end" px="md" pb="md" pt="200px">
             <Stack maw={400}>
               <Text c="white" className="!text-lg md:!text-2xl">
                 &quot;Teamlypro has been a game changer for us. It has made it

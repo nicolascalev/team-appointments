@@ -53,3 +53,10 @@ export const bookingSchema = z.object({
   employeeIds: z.array(z.string()).min(1, "At least one employee must be selected"),
   timeSlot: z.string().min(1, "Time slot is required"),
 });
+
+export const updateUserProfileSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").optional(),
+  email: z.string().email("Invalid email address").optional(),
+  phone: z.string().optional(),
+  avatar: z.instanceof(File).optional(),
+});
