@@ -19,6 +19,7 @@
     "@mantine/modals": "^8.0.2",
     "@mantine/notifications": "^8.0.2",
     "@mantine/nprogress": "^8.0.2",
+    "@payloadcms/richtext-lexical": "^3.59.1",
     "@prisma/client": "^6.8.2",
     "@tabler/icons-react": "^3.33.0",
     "@types/bcryptjs": "^2.4.6",
