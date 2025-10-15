@@ -8,12 +8,15 @@ import {
   Image,
   AspectRatio,
   Anchor,
+  Divider,
+  Grid,
 } from "@mantine/core";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import { getCmsImageUrl } from "@/lib/utils";
 import moment from "moment";
 import { jsxConverter } from "@/components/RichText/jsxConverter";
 import type { Metadata } from "next";
+import BlogCard from "@/components/BlogCard";
 
 // Type definitions for blog post data
 interface BlogPost {
@@ -196,7 +199,7 @@ async function SingleBlogPage({ params }: { params: { slug: string } }) {
   const { slug } = await params;
 
   const data = await cmsFetcher(`/api/posts`, {
-    depth: "1",
+    depth: "2",
     where: {
       slug: {
         equals: slug,
@@ -255,6 +258,7 @@ async function SingleBlogPage({ params }: { params: { slug: string } }) {
     timeRequired: `PT${readingTimeMinutes}M`,
   };
 
+  console.log(post);
   return (
     <>
       {/* Structured Data */}
@@ -305,6 +309,34 @@ async function SingleBlogPage({ params }: { params: { slug: string } }) {
           <div className="prose prose-lg max-w-none">
             <RichText data={post.content} converters={jsxConverter} />
           </div>
+        )}
+
+        {post.relatedPosts && post.relatedPosts.length > 0 && (
+          <>
+            <Divider mt="xl" />
+            <Title order={2} fw={500} my="xl">
+              Related articles
+            </Title>
+            <Grid gutter="md">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {post.relatedPosts.map((relatedPost: any) => (
+                <BlogCard
+                  key={relatedPost.id}
+                  span={{ base: 12, sm: 6 }}
+                  post={{
+                    id: relatedPost.id,
+                    slug: relatedPost.slug,
+                    title: relatedPost.title,
+                    heroImage: {
+                      url: relatedPost.meta?.image?.url || "",
+                    },
+                    publishedAt: relatedPost.meta?.image?.createdAt,
+                    categories: relatedPost.categories || [],
+                  }}
+                />
+              ))}
+            </Grid>
+          </>
         )}
       </Container>
     </>

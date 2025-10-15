@@ -1,11 +1,16 @@
-import { Anchor, AspectRatio, GridCol, Image, Text } from "@mantine/core";
+import {
+  Anchor,
+  AspectRatio,
+  GridCol,
+  GridColProps,
+  Image,
+  Text,
+} from "@mantine/core";
 import { getCmsImageUrl } from "@/lib/utils";
 import moment from "moment";
 import React from "react";
 
-function BlogCard({
-  post,
-}: {
+type BlogCardProps = GridColProps & {
   post: {
     id: string;
     slug: string;
@@ -14,9 +19,11 @@ function BlogCard({
     publishedAt?: string;
     categories: { title: string }[];
   };
-}) {
+};
+
+function BlogCard({ post, ...props }: BlogCardProps) {
   return (
-    <GridCol span={{ base: 12, sm: 6, md: 4 }} mb="xl">
+    <GridCol span={{ base: 12, sm: 6, md: 4 }} mb="xl" {...props}>
       <Anchor
         href={`/blog/${post.slug}`}
         c="inherit"
