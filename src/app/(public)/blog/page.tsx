@@ -1,3 +1,4 @@
+import BlogCard from "@/components/BlogCard";
 import { cmsFetcher } from "@/lib/fetchers";
 import { getCmsImageUrl } from "@/lib/utils";
 import {
@@ -21,8 +22,11 @@ async function getFeaturedPosts() {
   const response = await cmsFetcher(`/api/posts`, {
     depth: "1",
     limit: "6",
-    // select: 'title,slug,meta,createdAt,categories',
-    "where[categories][title][in]": "First Steps",
+    where: {
+      'categories.slug': {
+        contains: "Featured",
+      },
+    },
     sort: "-createdAt",
   });
   return response.docs;
@@ -125,40 +129,3 @@ async function BlogPage() {
 }
 
 export default BlogPage;
-
-function BlogCard({
-  post,
-}: {
-  post: {
-    id: string;
-    slug: string;
-    title: string;
-    heroImage: { url: string };
-    publishedAt?: string;
-    categories: { title: string }[];
-  };
-}) {
-  return (
-    <GridCol span={{ base: 12, sm: 6, md: 4 }} mb="xl">
-      <Anchor
-        href={`/blog/${post.slug}`}
-        c="inherit"
-        underline="never"
-        style={{ display: "block" }}
-      >
-        <AspectRatio ratio={3 / 2} mx="auto">
-          <Image src={getCmsImageUrl(post.heroImage.url)} alt={post.title} radius="md" />
-        </AspectRatio>
-        <div className="flex gap-4 my-4">
-          <Text fw={500}>{post.categories[0].title ?? "Article"}</Text>
-          <Text>
-            {post.publishedAt
-              ? moment(post.publishedAt).format("MMMM D, YYYY")
-              : ""}
-          </Text>
-        </div>
-        <Text fw={600} lineClamp={3}>{post.title}</Text>
-      </Anchor>
-    </GridCol>
-  );
-}

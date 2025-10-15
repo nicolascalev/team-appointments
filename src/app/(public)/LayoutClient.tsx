@@ -76,7 +76,7 @@ export default function LayoutClient({
                   size="sm"
                   c="inherit"
                   component={Link}
-                  href="/team"
+                  href="/blog"
                 >
                   News & Insights
                 </Button>
