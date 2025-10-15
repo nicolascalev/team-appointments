@@ -60,7 +60,9 @@ export default function LayoutClient({
                 hiddenFrom="sm"
                 size="sm"
               />
-              <Logo />
+              <Link href="/">
+                <Logo />
+              </Link>
               <Box visibleFrom="sm">
                 <Button
                   variant="subtle"
