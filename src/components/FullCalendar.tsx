@@ -54,6 +54,20 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
     selectedTeams.map((team) => team.id),
     format(currentDate, "yyyy-MM-dd")
   );
+  // Helper function to check if a date falls within a block off range
+  const isDateInBlockOffRange = (date: Date, blockOff: EventFull) => {
+    const blockOffStart = new Date(blockOff.start);
+    const blockOffEnd = new Date(blockOff.end);
+    const checkDate = new Date(date);
+    
+    // Set time to start of day for comparison
+    checkDate.setHours(0, 0, 0, 0);
+    blockOffStart.setHours(0, 0, 0, 0);
+    blockOffEnd.setHours(0, 0, 0, 0);
+    
+    return checkDate >= blockOffStart && checkDate <= blockOffEnd;
+  };
+
   const hasEventsOnDay = (date: Date) => {
     const hasAppointments = eventsData?.appointments?.some(
       (appointment) =>
@@ -61,9 +75,7 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
         format(date, "yyyy-MM-dd")
     );
     const hasBlockOffs = eventsData?.blockOffs?.some(
-      (blockOff) =>
-        format(new Date(blockOff.start), "yyyy-MM-dd") ===
-        format(date, "yyyy-MM-dd")
+      (blockOff) => isDateInBlockOffRange(date, blockOff)
     );
     return hasAppointments || hasBlockOffs;
   };
@@ -86,9 +98,7 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
     );
     setFilteredBlockOffs(
       eventsData?.blockOffs?.filter(
-        (blockOff) =>
-          format(new Date(blockOff.start), "yyyy-MM-dd") ===
-          format(day, "yyyy-MM-dd")
+        (blockOff) => isDateInBlockOffRange(day, blockOff)
       ) || []
     );
     openDayDrawer();
@@ -182,15 +192,27 @@ function Day({
   };
   handleDayClick: (day: Date) => void;
 }) {
+  // Helper function to check if a date falls within a block off range
+  const isDateInBlockOffRange = (date: Date, blockOff: EventFull) => {
+    const blockOffStart = new Date(blockOff.start);
+    const blockOffEnd = new Date(blockOff.end);
+    const checkDate = new Date(date);
+    
+    // Set time to start of day for comparison
+    checkDate.setHours(0, 0, 0, 0);
+    blockOffStart.setHours(0, 0, 0, 0);
+    blockOffEnd.setHours(0, 0, 0, 0);
+    
+    return checkDate >= blockOffStart && checkDate <= blockOffEnd;
+  };
+
   const filteredAppointments = eventsData?.appointments?.filter(
     (appointment) =>
       format(new Date(appointment.start), "yyyy-MM-dd") ===
       format(day, "yyyy-MM-dd")
   );
   const filteredBlockOffs = eventsData?.blockOffs?.filter(
-    (blockOff) =>
-      format(new Date(blockOff.start), "yyyy-MM-dd") ===
-      format(day, "yyyy-MM-dd")
+    (blockOff) => isDateInBlockOffRange(day, blockOff)
   );
   const totalEvents =
     (filteredAppointments?.length || 0) + (filteredBlockOffs?.length || 0);
