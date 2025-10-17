@@ -36,6 +36,12 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
   const monthEnd = endOfMonth(currentDate);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
+  // Get the day of the week for the first day of the month (0 = Sunday, 1 = Monday, etc.)
+  const firstDayOfWeek = monthStart.getDay();
+
+  // Create empty cells for the days before the first day of the month
+  const emptyCells = Array.from({ length: firstDayOfWeek }, () => null);
+
   const previousMonth = () => {
     setCurrentDate(subMonths(currentDate, 1));
   };
@@ -44,11 +50,10 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
     setCurrentDate(addMonths(currentDate, 1));
   };
 
-  const { events: eventsData, eventsLoading } =
-    useEvents(
-      selectedTeams.map((team) => team.id),
-      format(currentDate, "yyyy-MM-dd")
-    );
+  const { events: eventsData, eventsLoading } = useEvents(
+    selectedTeams.map((team) => team.id),
+    format(currentDate, "yyyy-MM-dd")
+  );
   const hasEventsOnDay = (date: Date) => {
     const hasAppointments = eventsData?.appointments?.some(
       (appointment) =>
@@ -115,6 +120,17 @@ function FullCalendar({ selectedTeams }: FullCalendarProps) {
           </div>
         ))}
 
+        {emptyCells.map((_, index) => (
+          <Card
+            key={`empty-${index}`}
+            radius="none"
+            className="min-h-[80px]"
+            bg="transparent"
+            withBorder
+          >
+            {/* Empty cell */}
+          </Card>
+        ))}
         {days.map((day) => (
           <Card
             withBorder
@@ -176,14 +192,13 @@ function Day({
       format(new Date(blockOff.start), "yyyy-MM-dd") ===
       format(day, "yyyy-MM-dd")
   );
-  const totalEvents = (filteredAppointments?.length || 0) + (filteredBlockOffs?.length || 0);
+  const totalEvents =
+    (filteredAppointments?.length || 0) + (filteredBlockOffs?.length || 0);
   return (
     <>
       <Text size="xs" mb="xs" truncate="end" visibleFrom="sm">
         {totalEvents}
-        {totalEvents === 1
-          ? " event"
-          : " events"}
+        {totalEvents === 1 ? " event" : " events"}
       </Text>
       <Group
         wrap="nowrap"
