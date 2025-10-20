@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { sign, verify } from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import type { User } from "../../prisma/generated/client";
+import { CurrentUser } from "@/lib/types";
 
 type LoginInput = {
   email: string;
@@ -117,7 +117,7 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
   }
 }
 
-export async function getCurrentUser(): Promise<User | null> {
+export async function getCurrentUser(): Promise<CurrentUser | null> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("token");
@@ -135,6 +135,9 @@ export async function getCurrentUser(): Promise<User | null> {
     // Get user from database
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
+      include: {
+        memberOf: true,
+      },
     });
 
     if (!user) {

@@ -1,4 +1,4 @@
-import { Prisma } from "../../prisma/generated";
+import { Prisma, User } from "../../prisma/generated";
 
 export type TeamMemberWithUser = Prisma.TeamMemberGetPayload<{
   include: {
@@ -144,3 +144,21 @@ export type EventFull = Prisma.EmployeeBlockOffGetPayload<{
     };
   };
 }>;
+
+export type CurrentUser = Prisma.UserGetPayload<{
+  include: {
+    memberOf: true;
+  };
+}>;
+
+// Admin Dashboard Stats Type
+export type AdminDashboardStats = {
+  totalAppointmentsThisMonth: number;
+  todaysAppointments: number;
+  upcomingAppointments: number;
+  cancelledThisMonth: number;
+  activeMembers: User[];
+  membersWithUpcomingAvailability: User[];
+  membersOnScheduleToday: User[];
+  staffOffWorkToday: User[];
+};

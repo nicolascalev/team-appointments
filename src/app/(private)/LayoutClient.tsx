@@ -1,4 +1,7 @@
 "use client";
+import { logout } from "@/actions/auth";
+import Logo from "@/components/Logo";
+import { CurrentUser } from "@/lib/types";
 import {
   Anchor,
   AppShell,
@@ -13,13 +16,10 @@ import {
   Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { User } from "../../../prisma/generated/client";
-import { logout } from "@/actions/auth";
 import { IconLogout, IconUser } from "@tabler/icons-react";
 import Link from "next/link";
-import Logo from "@/components/Logo";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const links = [
   { label: "Dashboard", href: "/dashboard" },
@@ -33,7 +33,7 @@ export default function LayoutClient({
   currentUser,
 }: {
   children: React.ReactNode;
-  currentUser: User;
+  currentUser: CurrentUser;
 }) {
   const [opened, { toggle, close }] = useDisclosure();
   const pathname = usePathname();
@@ -42,6 +42,9 @@ export default function LayoutClient({
     close();
   }, [pathname, close]);
 
+  const currentUserRole = currentUser.memberOf.find(
+    (member) => member.teamId === currentUser.currentSessionTeamId
+  )?.role;
   return (
     <AppShell
       header={{ height: 60 }}
@@ -92,32 +95,38 @@ export default function LayoutClient({
                 >
                   Team
                 </Button>
-                <Menu trigger="hover" position="bottom-start">
-                  <Menu.Target>
-                    <Button
-                      variant="subtle"
-                      size="sm"
-                      c="inherit"
-                      component={Link}
-                      href="/admin/dashboard"
-                    >
-                      Admin
-                    </Button>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Item component={Link} href="/admin">
-                      Admin Settings
-                    </Menu.Item>
-                    <Menu.Item component={Link} href="/admin/dashboard">
-                      Admin Dashboard
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
+                {currentUserRole === "ADMIN" && (
+                  <Menu trigger="hover" position="bottom-start">
+                    <Menu.Target>
+                      <Button
+                        variant="subtle"
+                        size="sm"
+                        c="inherit"
+                        component={Link}
+                        href="/admin/dashboard"
+                      >
+                        Admin
+                      </Button>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item component={Link} href="/admin">
+                        Admin Settings
+                      </Menu.Item>
+                      <Menu.Item component={Link} href="/admin/dashboard">
+                        Admin Dashboard
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                )}
               </Box>
             </Group>
             <Menu position="bottom-end">
               <Menu.Target>
-                <Avatar style={{ cursor: "pointer" }} visibleFrom="sm" src={currentUser.avatarUrl}>
+                <Avatar
+                  style={{ cursor: "pointer" }}
+                  visibleFrom="sm"
+                  src={currentUser.avatarUrl}
+                >
                   {currentUser.name?.charAt(0) || "U"}
                 </Avatar>
               </Menu.Target>
