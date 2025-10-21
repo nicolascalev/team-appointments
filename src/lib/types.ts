@@ -1,4 +1,4 @@
-import { Prisma, User } from "../../prisma/generated";
+import { Prisma } from "../../prisma/generated";
 
 export type TeamMemberWithUser = Prisma.TeamMemberGetPayload<{
   include: {
@@ -157,8 +157,9 @@ export type AdminDashboardStats = {
   todaysAppointments: number;
   upcomingAppointments: number;
   cancelledThisMonth: number;
-  activeMembers: User[];
-  membersWithUpcomingAvailability: User[];
-  membersOnScheduleToday: User[];
-  staffOffWorkToday: User[];
+  activeMembers: TeamMemberWithUser[];
+  membersWithUpcomingAvailability: TeamMemberWithUser[];
+  membersOnScheduleToday: TeamMemberWithUser[];
+  staffOffWorkToday: TeamMemberWithUser[];
+  allTeamMembers: TeamMemberWithUser[];
 };

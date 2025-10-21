@@ -17,6 +17,7 @@ import { AdminDashboardStats } from "@/lib/types";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
 import { User } from "../../../../../prisma/generated";
+import FullCalendarAdmin from "@/components/FullCalendarAdmin";
 
 interface AdminDashboardClientProps {
   stats: AdminDashboardStats;
@@ -32,31 +33,31 @@ function AdminDashboardClient({ stats }: AdminDashboardClientProps) {
 
   function activeMembersDrawer() {
     setMembersDrawerTitle("Active members");
-    setDrawerMembers(stats.activeMembers);
+    setDrawerMembers(stats.activeMembers.map((member) => member.user as User));
     openMembersDrawer();
   }
 
   function membersWithUpcomingAvailabilityDrawer() {
     setMembersDrawerTitle("Members with upcoming availability");
-    setDrawerMembers(stats.membersWithUpcomingAvailability);
+    setDrawerMembers(stats.membersWithUpcomingAvailability.map((member) => member.user as User));
     openMembersDrawer();
   }
 
   function membersOnScheduleTodayDrawer() {
     setMembersDrawerTitle("Members on schedule today");
-    setDrawerMembers(stats.membersOnScheduleToday);
+    setDrawerMembers(stats.membersOnScheduleToday.map((member) => member.user as User));
     openMembersDrawer();
   }
 
   function staffOffWorkTodayDrawer() {
     setMembersDrawerTitle("Staff off work today");
-    setDrawerMembers(stats.staffOffWorkToday);
+    setDrawerMembers(stats.staffOffWorkToday.map((member) => member.user as User));
     openMembersDrawer();
   }
 
   return (
     <Container mx={{ base: "-md", sm: "auto" }} p={{ base: "md", sm: 0 }}>
-      <Stack>
+      <Stack pb="xl">
         <div>
           <Text fw={500} mt="xl">
             Admin Dashboard
@@ -128,6 +129,13 @@ function AdminDashboardClient({ stats }: AdminDashboardClientProps) {
           />
         </SimpleGrid>
         <Divider my="xl" />
+        <div>
+          <Text fw={500}>Calendar</Text>
+          <Text c="dimmed" size="sm">
+            View the calendar for the selected members
+          </Text>
+        </div>
+        <FullCalendarAdmin members={stats.allTeamMembers} />
       </Stack>
       <Drawer
         opened={membersDrawerOpened}

@@ -217,16 +217,17 @@ export async function getAdminDashboardStats() {
   }
 
   // Get the actual User objects for active members
-  const { data: activeMembers, error: activeMembersUsersError } = await tryCatch(
-    prisma.teamMember.findMany({
-      where: {
-        id: { in: activeMembersCount.map((am) => am.teamMemberId) },
-      },
-      include: {
-        user: true,
-      },
-    })
-  );
+  const { data: activeMembers, error: activeMembersUsersError } =
+    await tryCatch(
+      prisma.teamMember.findMany({
+        where: {
+          id: { in: activeMembersCount.map((am) => am.teamMemberId) },
+        },
+        include: {
+          user: true,
+        },
+      })
+    );
 
   if (activeMembersUsersError) {
     return { data: null, error: activeMembersUsersError };
@@ -266,10 +267,11 @@ export async function getAdminDashboardStats() {
       todaysAppointments,
       upcomingAppointments,
       cancelledThisMonth,
-      activeMembers: activeMembers.map((tm) => tm.user),
-      membersWithUpcomingAvailability: membersWithUpcomingAvailability.map((m) => m.user),
-      membersOnScheduleToday: membersOnScheduleToday.map((m) => m.user),
-      staffOffWorkToday: staffOffWorkToday.map((m) => m.user),
+      activeMembers: activeMembers,
+      membersWithUpcomingAvailability: membersWithUpcomingAvailability,
+      membersOnScheduleToday: membersOnScheduleToday,
+      staffOffWorkToday: staffOffWorkToday,
+      allTeamMembers: allTeamMembers,
     } as AdminDashboardStats,
     error: null,
   };

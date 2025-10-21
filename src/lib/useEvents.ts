@@ -22,3 +22,24 @@ export function useEvents(teams: string[], date: string) {
     revalidateEvents: mutate,
   };
 }
+
+export function useTeamMemberEvents(teamMembers: string[], date: string) {
+  const { data, error, isLoading, mutate } = useSWR<{
+    data: {
+      appointments: AppointmentFull[];
+      blockOffs: EventFull[];
+    };
+  }>(
+    teamMembers && teamMembers.length > 0 && date
+      ? [`/api/events-members`, { teamMembers, date }]
+      : null,
+    ([url, params]) => fetcherWithArgs(url, params as Record<string, string>)
+  );
+
+  return {
+    events: data?.data,
+    eventsError: error,
+    eventsLoading: isLoading,
+    revalidateEvents: mutate,
+  };
+}
