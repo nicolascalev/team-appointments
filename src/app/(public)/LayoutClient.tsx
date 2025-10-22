@@ -68,7 +68,7 @@ export default function LayoutClient({
                   size="sm"
                   c="inherit"
                   component={Link}
-                  href="/dashboard"
+                  href="/"
                 >
                   Features
                 </Button>

@@ -1,5 +1,7 @@
 "use client";
 
+import { submitContactForm } from "@/actions/contact";
+import { contactFormSchema } from "@/lib/validation-schemas";
 import {
   Button,
   Container,
@@ -12,10 +14,8 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
-import { useState } from "react";
-import { submitContactForm } from "@/actions/contact";
-import { contactFormSchema } from "@/lib/validation-schemas";
 import { zodResolver } from "mantine-form-zod-resolver";
+import { useState } from "react";
 
 function ContactPageClient() {
   const [loading, setLoading] = useState(false);
@@ -42,13 +42,11 @@ function ContactPageClient() {
     try {
       setLoading(true);
 
-      const result = await submitContactForm(values);
+      const submitContactFormResult = await submitContactForm(values);
 
-      if (result.error) {
+      if (!submitContactFormResult.success) {
         throw new Error(
-          result.error instanceof Error
-            ? result.error.message
-            : "Unknown error occurred"
+          submitContactFormResult.message ?? "Unknown error occurred"
         );
       }
 

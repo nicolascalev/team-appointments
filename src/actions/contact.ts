@@ -1,9 +1,8 @@
 "use server";
 
-import { z } from "zod";
-import { contactFormSchema } from "@/lib/validation-schemas";
 import { sendTransactionalEmail } from "@/lib/sendEmail";
-
+import { contactFormSchema } from "@/lib/validation-schemas";
+import { z } from "zod";
 export async function submitContactForm(
   data: z.infer<typeof contactFormSchema>
 ) {
