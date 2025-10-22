@@ -3,9 +3,10 @@
 import { getCurrentUser } from "@/actions/auth";
 import { prisma } from "@/lib/prisma";
 import { tryCatch } from "@/lib/try-catch";
-import { Service, TeamRole } from "../../prisma/generated";
+import { Service, Team, TeamRole, User } from "../../prisma/generated";
 import { AvailabilityInput, BlockOff } from "@/lib/types";
 import { revalidatePath } from "next/cache";
+import { sendTransactionalEmail } from "@/lib/sendEmail";
 
 export async function getTeamMember(teamMemberId: string) {
   const { data: currentUserCanUpdate, error: errorCurrentUserCanUpdate } =
@@ -51,9 +52,8 @@ export async function getTeamMember(teamMemberId: string) {
 
 // this function checks if the current user is an admin of the team member
 export async function currentUserIsAdminOfMember(teamMemberId: string) {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -127,6 +127,9 @@ export async function updateTeamMember(
           set: [],
         },
       },
+      include: {
+        team: true,
+      },
     })
   );
 
@@ -175,6 +178,18 @@ export async function updateTeamMember(
       },
     })
   );
+
+  const updatedMemberUser = await prisma.user.findUnique({
+    where: { id: updatedTeamMember?.userId },
+  });
+
+  if (updatedMemberUser) {
+    try {
+      await notifyMemberUpdate(updatedMemberUser, updatedTeamMember?.team);
+    } catch (error) {
+      console.error("Error sending notification to member", error);
+    }
+  }
 
   if (servicesError) {
     return { data: null, error: "Error updating services" };
@@ -228,4 +243,16 @@ export async function updateMemberBio(teamMemberId: string, bio: string) {
   }
 
   return { data: updatedTeamMember, error: null };
+}
+
+async function notifyMemberUpdate(user: User, team: Team) {
+  await sendTransactionalEmail(
+    { email: user.email, name: user.name || "Member" },
+    "Your team member settings have been updated",
+    `<p>Your team member settings have been updated for the team ${team.name}. You can view your updated settings <a href="${process.env.NEXT_PUBLIC_URL}/team">here</a>. Make sure to select the correct team</p>`,
+    {
+      senderName: "Teamlypro",
+      senderEmail: "notifications@teamlypro.com",
+    }
+  );
 }
