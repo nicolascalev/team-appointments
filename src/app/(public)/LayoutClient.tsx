@@ -1,4 +1,5 @@
 "use client";
+import Footer from "@/components/landing/Footer";
 import Logo from "@/components/Logo";
 import {
   Anchor,
@@ -7,10 +8,8 @@ import {
   Burger,
   Button,
   Container,
-  Group,
-  Menu,
+  Group
 } from "@mantine/core";
-import Footer from "@/components/landing/Footer";
 import { useDisclosure } from "@mantine/hooks";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -82,7 +81,16 @@ export default function LayoutClient({
                 >
                   News & Insights
                 </Button>
-                <Menu trigger="hover" position="bottom-start">
+                <Button
+                  variant="subtle"
+                  size="sm"
+                  c="inherit"
+                  component={Link}
+                  href="/contact"
+                >
+                  Contact
+                </Button>
+                {/* <Menu trigger="hover" position="bottom-start">
                   <Menu.Target>
                     <Button
                       variant="subtle"
@@ -102,7 +110,7 @@ export default function LayoutClient({
                       Admin Dashboard
                     </Menu.Item>
                   </Menu.Dropdown>
-                </Menu>
+                </Menu> */}
               </Box>
             </Group>
             <Button component={Link} href="/login">
