@@ -248,9 +248,39 @@ export async function getAdminDashboardStats() {
     return hasAvailabilityToday && isSchedulable && !hasBlockOffToday;
   });
 
-  // 7. Members on schedule today (their schedule includes today)
+  // 7. Members on schedule today (their schedule includes today and not blocked off all day)
   const membersOnScheduleToday = allTeamMembers.filter((member) => {
-    return member.availability.some((avail) => avail.dayOfWeek === today);
+    const hasAvailabilityToday = member.availability.some(
+      (avail) => avail.dayOfWeek === today
+    );
+    const isSchedulable = member.isSchedulable;
+
+    // Check if member has any block offs that cover today
+    const hasBlockOffToday = member.blockOffs.some((blockOff) => {
+      const blockStart = new Date(blockOff.start);
+      const blockEnd = new Date(blockOff.end);
+
+      // Check if today falls within the block off period
+      const todayStart = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      );
+      const todayEnd = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        23,
+        59,
+        59,
+        999
+      );
+
+      // Block off covers today if it starts before or on today and ends after or on today
+      return blockStart <= todayEnd && blockEnd >= todayStart;
+    });
+
+    return hasAvailabilityToday && !hasBlockOffToday && isSchedulable;
   });
 
   // 8. Staff off work today (have block off today OR isSchedulable is false)
