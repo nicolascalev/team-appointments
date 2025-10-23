@@ -106,6 +106,8 @@ function ProfilePageClient({ user }: { user: User }) {
               placeholder="Enter your email"
               type="email"
               required
+              disabled
+              description="Your email cannot be changed"
               {...form.getInputProps("email")}
             />
 

@@ -7,16 +7,16 @@ import { tryCatch } from "@/lib/try-catch";
 import { CreateManyBusinessHoursInput } from "@/lib/types";
 import { createTeamSchema, teamSettingsSchema } from "@/lib/validation-schemas";
 import { revalidatePath } from "next/cache";
-import { TeamRole, type Prisma } from "../../prisma/generated";
+import { Team, TeamRole, User, type Prisma } from "../../prisma/generated";
 import { getDurationInMinutes } from "@/lib/utils";
+import { sendTransactionalEmail } from "@/lib/sendEmail";
 
 export async function createTeam(
   data: Prisma.TeamCreateInput & { avatar?: File }
 ) {
   try {
-    const { data: user, error: getCurrentUserError } = await tryCatch(
-      getCurrentUser()
-    );
+    const { data: user, error: getCurrentUserError } =
+      await tryCatch(getCurrentUser());
     if (getCurrentUserError || !user) {
       return { data: null, error: "Unauthorized" };
     }
@@ -128,9 +128,8 @@ export async function getUserCurrentSessionTeam() {
 export async function updateTeam(
   data: Prisma.TeamUpdateInput & { avatar?: File }
 ) {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -167,9 +166,8 @@ export async function updateTeam(
 export async function updateTeamBusinessHours(
   data: CreateManyBusinessHoursInput
 ) {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -209,9 +207,8 @@ export async function sendTeamInvites(emails: string[]): Promise<{
   data: number | null;
   error: string | null;
 }> {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -303,14 +300,37 @@ export async function sendTeamInvites(emails: string[]): Promise<{
     return { data: null, error: "Failed to create invites" };
   }
 
+  // Create notification list - only notify emails that were actually invited
+  const notifiable = validEmails.map((email) => {
+    const existingUser = userMap.get(email);
+    return {
+      email,
+      name: existingUser?.name || "New Team Member",
+    };
+  });
+
+  try {
+    const team = await prisma.team.findUnique({
+      where: { id: user.currentSessionTeamId },
+    });
+    if (team) {
+      await notifyTeamInvite({
+        inviter: user,
+        invitees: notifiable,
+        team: team as Team,
+      });
+    }
+  } catch (error) {
+    console.error("Error sending notification to invitees", error);
+  }
+
   revalidatePath("/admin");
   return { data: createdInvites?.count, error: null };
 }
 
 export async function loadTeamInvites() {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -361,9 +381,8 @@ export async function loadTeamInvites() {
 }
 
 export async function cancelTeamInvite(inviteId: string) {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -406,9 +425,8 @@ export async function cancelTeamInvite(inviteId: string) {
 }
 
 export async function updateTeamInviteRole(inviteId: string, role: TeamRole) {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -454,9 +472,8 @@ export async function updateTeamInviteRole(inviteId: string, role: TeamRole) {
 }
 
 export async function loadTeamServices() {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -500,9 +517,8 @@ export async function updateTeamSettings(data: {
   maxAppointmentsPerDay?: number | null;
   maxAppointmentsPerEmployee?: number | null;
 }) {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -565,4 +581,29 @@ export async function updateTeamSettings(data: {
 
   await revalidatePath("/admin");
   return { data: settings, error: null };
+}
+
+async function notifyTeamInvite({
+  inviter,
+  invitees,
+  team,
+}: {
+  inviter: User;
+  invitees: { email: string; name: string | null }[];
+  team: Team;
+}) {
+  for (const invitee of invitees) {
+    await sendTransactionalEmail(
+      {
+        email: invitee.email,
+        name: invitee.name || "New Team Member",
+      },
+      `You have been invited by ${inviter.name || team.name || "User"} to join ${team.name}`,
+      `<p>You have been invited by ${inviter.name || team.name || "User"} to join ${team.name}. You can accept the invite <a href="${process.env.NEXT_PUBLIC_URL}/team">here</a>. And scroll down to team invites to accept.</p>`,
+      {
+        senderName: inviter.name || "User" + " on Teamlypro",
+        senderEmail: "notifications@teamlypro.com",
+      }
+    );
+  }
 }
