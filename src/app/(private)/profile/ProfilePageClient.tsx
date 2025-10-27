@@ -10,16 +10,18 @@ import {
   Stack,
   Button,
   Group,
+  PasswordInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
 import { notifications } from "@mantine/notifications";
-import { updateUserProfile } from "@/actions/user";
+import { updateUserProfile, resetPassword } from "@/actions/user";
 import PhotoInput from "@/components/PhotoInput";
 import { useRouter } from "next/navigation";
 
 function ProfilePageClient({ user }: { user: User }) {
   const [loading, setLoading] = useState(false);
+  const [loadingPassword, setLoadingPassword] = useState(false);
   const router = useRouter();
 
   const form = useForm({
@@ -33,6 +35,22 @@ function ProfilePageClient({ user }: { user: User }) {
       name: (value) =>
         value.length < 2 ? "Name must be at least 2 characters" : null,
       email: (value) => (!/^\S+@\S+$/.test(value) ? "Invalid email" : null),
+    },
+  });
+
+  const resetPasswordForm = useForm({
+    initialValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    },
+    validate: {
+      currentPassword: (value) =>
+        value.length < 1 ? "Current password is required" : null,
+      newPassword: (value) =>
+        value.length < 8 ? "New password must be at least 8 characters" : null,
+      confirmNewPassword: (value, values) =>
+        value !== values.newPassword ? "Passwords don't match" : null,
     },
   });
 
@@ -80,6 +98,41 @@ function ProfilePageClient({ user }: { user: User }) {
     }
   };
 
+  const handleResetPassword = async (
+    values: typeof resetPasswordForm.values
+  ) => {
+    try {
+      setLoadingPassword(true);
+
+      const resetPasswordResult = await resetPassword({
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+        confirmNewPassword: values.confirmNewPassword,
+      });
+
+      if (resetPasswordResult.error) {
+        throw new Error(resetPasswordResult.error as string);
+      }
+
+      notifications.show({
+        title: "Success",
+        message: "Password updated successfully",
+        color: "teal",
+      });
+
+      resetPasswordForm.reset();
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message:
+          error instanceof Error ? error.message : "Failed to update password",
+        color: "red",
+      });
+    } finally {
+      setLoadingPassword(false);
+    }
+  };
+
   return (
     <Container size="md" p={0}>
       <SimpleGrid cols={{ base: 1, sm: 2 }} pt="md">
@@ -122,6 +175,7 @@ function ProfilePageClient({ user }: { user: User }) {
                 type="submit"
                 loading={loading}
                 w={{ base: "100%", sm: "auto" }}
+                disabled={!form.isDirty()}
               >
                 Update Profile
               </Button>
@@ -136,7 +190,33 @@ function ProfilePageClient({ user }: { user: User }) {
           <Text c="dimmed">Update your password</Text>
         </div>
         <div className="flex flex-col gap-4">
-          {/* Password update form will go here */}
+          <form onSubmit={resetPasswordForm.onSubmit(handleResetPassword)}>
+            <Stack>
+              <PasswordInput
+                label="Current Password"
+                placeholder="Enter your current password"
+                required
+                {...resetPasswordForm.getInputProps("currentPassword")}
+              />
+              <PasswordInput
+                label="New Password"
+                placeholder="Enter your new password"
+                required
+                {...resetPasswordForm.getInputProps("newPassword")}
+              />
+              <PasswordInput
+                label="Confirm New Password"
+                placeholder="Confirm your new password"
+                required
+                {...resetPasswordForm.getInputProps("confirmNewPassword")}
+              />
+              <Group justify="flex-end">
+                <Button type="submit" loading={loadingPassword}>
+                  Update Password
+                </Button>
+              </Group>
+            </Stack>
+          </form>
         </div>
       </SimpleGrid>
     </Container>

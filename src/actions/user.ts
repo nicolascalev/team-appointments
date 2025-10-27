@@ -4,9 +4,10 @@ import { getCurrentUser } from "./auth";
 import { tryCatch } from "@/lib/try-catch";
 import { revalidatePath } from "next/cache";
 import { uploadFiles } from "@/lib/file-uploads";
-import { updateUserProfileSchema } from "@/lib/validation-schemas";
+import { updateUserProfileSchema, resetPasswordSchema } from "@/lib/validation-schemas";
 import { TeamRole, User, Team } from "../../prisma/generated";
 import { sendTransactionalEmail } from "@/lib/sendEmail";
+import bcrypt from "bcryptjs";
 
 export async function getUserTeamPageData() {
   const { data: user, error: getCurrentUserError } =
@@ -377,6 +378,72 @@ export async function updateUserProfile(data: {
   return { data: updatedUser, error: null };
 }
 
+export async function resetPassword(data: {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}) {
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
+  if (getCurrentUserError || !user) {
+    return { data: null, error: "Unauthorized" };
+  }
+
+  const validatedData = resetPasswordSchema.safeParse(data);
+  if (!validatedData.success) {
+    return { data: null, error: validatedData.error.errors[0].message };
+  }
+
+  // Verify current password
+  const { data: userWithPassword, error: getUserError } = await tryCatch(
+    prisma.user.findUnique({
+      where: { id: user.id },
+    })
+  );
+
+  if (getUserError || !userWithPassword) {
+    return { data: null, error: "Failed to verify current password" };
+  }
+
+  const isCurrentPasswordValid = await bcrypt.compare(
+    data.currentPassword,
+    userWithPassword.password
+  );
+
+  if (!isCurrentPasswordValid) {
+    return { data: null, error: "Current password is incorrect" };
+  }
+
+  // Hash new password
+  const hashedPassword = await bcrypt.hash(data.newPassword, 10);
+
+  // Update password
+  const { data: updatedUser, error: updatePasswordError } = await tryCatch(
+    prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    })
+  );
+
+  if (updatePasswordError) {
+    return { data: null, error: "Failed to update password" };
+  }
+
+  // Remove password from response
+  if (updatedUser) {
+    updatedUser.password = "";
+  }
+
+  // Notify the user that their password has been updated
+  try {
+    await notifyPasswordUpdate(user);
+  } catch (error) {
+    console.error("Error sending password update notification", error);
+  }
+
+  return { data: updatedUser, error: null };
+}
+
 async function notifyTeamAdmins(admins: User[], team: Team, user: User) {
   // Send notifications to all team admins
   const notificationPromises = admins.map((admin) =>
@@ -414,6 +481,36 @@ async function notifyTeamAdminNewMember(
     `,
     {
       senderName: newMember.name || "User" + " on Teamlypro",
+      senderEmail: "notifications@teamlypro.com",
+    }
+  );
+}
+
+async function notifyPasswordUpdate(user: User) {
+  await sendTransactionalEmail(
+    {
+      email: user.email,
+      name: user.name || "User",
+    },
+    "Your password has been updated",
+    `
+      <div>
+        <h2>Password Updated</h2>
+        <p>Your password for your Teamlypro account has been successfully updated.</p>
+        
+        <p><strong>Security Information:</strong></p>
+        <ul>
+          <li>If you did not make this change, please contact support immediately</li>
+          <li>If you made this change, you can safely ignore this email</li>
+        </ul>
+        
+        <p>Date: ${new Date().toLocaleDateString()}</p>
+        
+        <p><strong>Teamlypro Security Team</strong></p>
+      </div>
+    `,
+    {
+      senderName: "Teamlypro",
       senderEmail: "notifications@teamlypro.com",
     }
   );
