@@ -8,6 +8,7 @@ import {
 } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import moment from "moment";
+import { AppointmentStatus } from "../../prisma/generated";
 
 type GetAvailableSlotsArgs = {
   teamId: string;
@@ -63,6 +64,9 @@ export async function getAvailableSlots({
       },
       appointments: {
         where: {
+          status: {
+            in: [AppointmentStatus.CONFIRMED, AppointmentStatus.RESCHEDULED],
+          },
           start: { lte: dayEnd },
           end: { gte: dayStart },
         },
@@ -231,6 +235,12 @@ export async function validateSlotAvailability({
           },
           appointments: {
             where: {
+              status: {
+                in: [
+                  AppointmentStatus.CONFIRMED,
+                  AppointmentStatus.RESCHEDULED,
+                ],
+              },
               start: { lte: bufferEnd },
               end: { gte: start },
             },
