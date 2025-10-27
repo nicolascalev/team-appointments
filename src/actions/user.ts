@@ -5,11 +5,12 @@ import { tryCatch } from "@/lib/try-catch";
 import { revalidatePath } from "next/cache";
 import { uploadFiles } from "@/lib/file-uploads";
 import { updateUserProfileSchema } from "@/lib/validation-schemas";
+import { TeamRole, User, Team } from "../../prisma/generated";
+import { sendTransactionalEmail } from "@/lib/sendEmail";
 
 export async function getUserTeamPageData() {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
 
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
@@ -104,9 +105,8 @@ export async function getUserTeamPageData() {
 }
 
 export async function updateUserCurrentSessionTeam(teamId: string) {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
 
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
@@ -147,9 +147,8 @@ export async function updateUserCurrentSessionTeam(teamId: string) {
 }
 
 export async function acceptInvite(inviteId: string) {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -214,14 +213,32 @@ export async function acceptInvite(inviteId: string) {
     return { data: null, error: "Failed to accept invite" };
   }
 
+  try {
+    const teamAdmins = await prisma.teamMember.findMany({
+      where: {
+        teamId: invite.teamId,
+        role: TeamRole.ADMIN,
+      },
+      include: {
+        user: true,
+      },
+    });
+    await notifyTeamAdmins(
+      teamAdmins.map((admin) => admin.user),
+      invite.team,
+      user
+    );
+  } catch (error) {
+    console.error("Error sending notification to team admins", error);
+  }
+
   revalidatePath("/team");
   return { data: teamMember, error: null };
 }
 
 export async function rejectInvite(inviteId: string) {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -258,9 +275,8 @@ export async function rejectInvite(inviteId: string) {
 
 // list user teams
 export async function getUserTeams() {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -290,9 +306,8 @@ export async function updateUserProfile(data: {
   phone?: string;
   avatar?: File;
 }) {
-  const { data: user, error: getCurrentUserError } = await tryCatch(
-    getCurrentUser()
-  );
+  const { data: user, error: getCurrentUserError } =
+    await tryCatch(getCurrentUser());
   if (getCurrentUserError || !user) {
     return { data: null, error: "Unauthorized" };
   }
@@ -360,4 +375,46 @@ export async function updateUserProfile(data: {
 
   revalidatePath("/profile");
   return { data: updatedUser, error: null };
+}
+
+async function notifyTeamAdmins(admins: User[], team: Team, user: User) {
+  // Send notifications to all team admins
+  const notificationPromises = admins.map((admin) =>
+    notifyTeamAdminNewMember(admin, team, user)
+  );
+
+  await Promise.allSettled(notificationPromises);
+}
+
+async function notifyTeamAdminNewMember(
+  admin: User,
+  team: Team,
+  newMember: User
+) {
+  await sendTransactionalEmail(
+    {
+      email: admin.email,
+      name: admin.name || "Admin",
+    },
+    `New team member joined ${team.name}`,
+    `
+      <div>
+        <h2>New Team Member</h2>
+        <p><strong>${newMember.name || newMember.email}</strong> has joined your team <strong>${team.name}</strong>.</p>
+        
+        <h3>Member Details:</h3>
+        <ul>
+          <li><strong>Name:</strong> ${newMember.name || "Not provided"}</li>
+          <li><strong>Email:</strong> ${newMember.email}</li>
+          <li><strong>Joined:</strong> ${new Date().toLocaleDateString()}</li>
+        </ul>
+        
+        <p>You can manage team members in your admin dashboard.</p>
+      </div>
+    `,
+    {
+      senderName: newMember.name || "User" + " on Teamlypro",
+      senderEmail: "notifications@teamlypro.com",
+    }
+  );
 }

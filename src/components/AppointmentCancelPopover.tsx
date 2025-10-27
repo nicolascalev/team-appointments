@@ -24,7 +24,7 @@ function AppointmentCancelPopover({
     if (error) {
       showNotification({
         title: "Error",
-        message: error.message,
+        message: error instanceof Error ? error.message : error,
         color: "red",
       });
     } else {

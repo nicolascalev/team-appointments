@@ -6,6 +6,8 @@ import { tryCatch } from "@/lib/try-catch";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "./auth";
 import moment from "moment";
+import { sendTransactionalEmail } from "@/lib/sendEmail";
+import { AppointmentFull } from "@/lib/types";
 
 export async function getAppointment(appointmentId: string) {
   const appointment = await prisma.appointment.findUnique({
@@ -30,6 +32,36 @@ export async function getAppointment(appointmentId: string) {
 }
 
 export async function cancelAppointment(appointmentId: string) {
+  // First fetch the appointment with all related data
+  const { data: appointmentData, error: fetchError } = await tryCatch(
+    prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: {
+        service: true,
+        team: {
+          include: {
+            settings: true,
+          },
+        },
+        teamMember: {
+          include: {
+            user: true,
+          },
+        },
+        user: true,
+      },
+    })
+  );
+
+  if (fetchError) {
+    return { data: null, error: fetchError };
+  }
+
+  if (!appointmentData) {
+    return { data: null, error: "Appointment not found" };
+  }
+
+  // Update the appointment status to cancelled
   const { data: appointment, error } = await tryCatch(
     prisma.appointment.update({
       where: { id: appointmentId },
@@ -39,6 +71,16 @@ export async function cancelAppointment(appointmentId: string) {
 
   if (error) {
     return { data: null, error };
+  }
+
+  // Notify team admins and team member about the cancellation
+  try {
+    await notifyTeamAboutCancellation(appointmentData as AppointmentFull);
+  } catch (notificationError) {
+    console.error(
+      "Error sending cancellation notifications",
+      notificationError
+    );
   }
 
   await revalidatePath("/confirmation/" + appointmentId);
@@ -312,4 +354,114 @@ export async function getTeamMembersEventsMonth(
     },
     error: null,
   };
+}
+
+async function notifyTeamAboutCancellation(booking: AppointmentFull) {
+  // Get team admins
+  const { data: teamAdmins, error: adminsError } = await tryCatch(
+    prisma.teamMember.findMany({
+      where: {
+        teamId: booking.teamId,
+        role: TeamRole.ADMIN,
+        isActive: true,
+      },
+      include: {
+        user: true,
+      },
+    })
+  );
+
+  if (adminsError) {
+    console.error("Error fetching team admins:", adminsError);
+    return;
+  }
+
+  // Notify team admins
+  if (teamAdmins && teamAdmins.length > 0) {
+    const adminNotificationPromises = teamAdmins.map((admin) =>
+      notifyAdminAboutCancellation(booking, admin.user)
+    );
+    await Promise.allSettled(adminNotificationPromises);
+  }
+
+  // Notify assigned team member
+  if (booking.teamMember?.user) {
+    await notifyTeamMemberAboutCancellation(booking, booking.teamMember.user);
+  }
+}
+
+async function notifyAdminAboutCancellation(
+  booking: AppointmentFull,
+  admin: { email: string; name: string | null }
+) {
+  const formattedDate = moment(booking.start).format("MMMM Do YYYY, h:mm a");
+  const formattedEndTime = moment(booking.end).format("h:mm a");
+
+  await sendTransactionalEmail(
+    {
+      email: admin.email,
+      name: admin.name || "Admin",
+    },
+    `Appointment cancelled for ${booking.team.name}`,
+    `
+      <div>
+        <h2>Appointment Cancellation</h2>
+        <p>A scheduled appointment for <strong>${booking.team.name}</strong> has been cancelled by the client.</p>
+        
+        <h3>Cancelled Appointment Details:</h3>
+        <ul>
+          <li><strong>Service:</strong> ${booking.service.name}</li>
+          <li><strong>Client:</strong> ${booking.clientName} (${booking.clientEmail})</li>
+          <li><strong>Date & Time:</strong> ${formattedDate} - ${formattedEndTime}</li>
+          <li><strong>Assigned to:</strong> ${booking.teamMember.user.name}</li>
+          <li><strong>Duration:</strong> ${booking.service.duration} minutes</li>
+          ${booking.service.price ? `<li><strong>Price:</strong> $${booking.service.price} ${booking.service.currencyCode || "USD"}</li>` : ""}
+        </ul>
+        
+        <p>This time slot is now available for booking.</p>
+      </div>
+    `,
+    {
+      senderName: "Teamlypro",
+      senderEmail: "notifications@teamlypro.com",
+    }
+  );
+}
+
+async function notifyTeamMemberAboutCancellation(
+  booking: AppointmentFull,
+  member: { email: string; name: string | null }
+) {
+  const formattedDate = moment(booking.start).format("MMMM Do YYYY, h:mm a");
+  const formattedEndTime = moment(booking.end).format("h:mm a");
+
+  await sendTransactionalEmail(
+    {
+      email: member.email,
+      name: member.name || "Team Member",
+    },
+    `Your appointment has been cancelled`,
+    `
+      <div>
+        <h2>Appointment Cancelled</h2>
+        <p>Your scheduled appointment for <strong>${booking.team.name}</strong> has been cancelled by the client.</p>
+        
+        <h3>Cancelled Appointment Details:</h3>
+        <ul>
+          <li><strong>Service:</strong> ${booking.service.name}</li>
+          <li><strong>Client:</strong> ${booking.clientName} (${booking.clientEmail})</li>
+          <li><strong>Date & Time:</strong> ${formattedDate} - ${formattedEndTime}</li>
+          <li><strong>Duration:</strong> ${booking.service.duration} minutes</li>
+          ${booking.service.price ? `<li><strong>Price:</strong> $${booking.service.price} ${booking.service.currencyCode || "USD"}</li>` : ""}
+          ${booking.notes ? `<li><strong>Notes:</strong> ${booking.notes}</li>` : ""}
+        </ul>
+        
+        <p>This time slot is now available for other bookings.</p>
+      </div>
+    `,
+    {
+      senderName: "Teamlypro",
+      senderEmail: "notifications@teamlypro.com",
+    }
+  );
 }
