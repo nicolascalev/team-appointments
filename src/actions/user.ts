@@ -486,7 +486,7 @@ async function notifyTeamAdminNewMember(
   );
 }
 
-async function notifyPasswordUpdate(user: User) {
+export async function notifyPasswordUpdate(user: User) {
   await sendTransactionalEmail(
     {
       email: user.email,

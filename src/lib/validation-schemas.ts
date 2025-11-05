@@ -77,3 +77,24 @@ export const resetPasswordSchema = z
     message: "Passwords don't match",
     path: ["confirmNewPassword"],
   });
+
+export const requestPasswordResetSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+export const verifyResetCodeSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  code: z.string().length(6, "Code must be 6 characters"),
+});
+
+export const resetPasswordWithCodeSchema = z
+  .object({
+    email: z.string().email("Invalid email address"),
+    code: z.string().length(6, "Code must be 6 characters"),
+    newPassword: z.string().min(8, "New password must be at least 8 characters"),
+    confirmNewPassword: z.string().min(8, "Please confirm your new password"),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "Passwords don't match",
+    path: ["confirmNewPassword"],
+  });

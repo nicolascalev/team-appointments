@@ -23,11 +23,24 @@ model User {
   currentSessionTeam   Team?    @relation("UserCurrentSessionTeam", fields: [currentSessionTeamId], references: [id])
   avatarUrl            String?
 
-  memberOf     TeamMember[]  @relation("UserMemberOf")
-  appointments Appointment[]
-  invites      Invite[]      @relation("UserInvites")
+  memberOf      TeamMember[]   @relation("UserMemberOf")
+  appointments  Appointment[]
+  invites       Invite[]       @relation("UserInvites")
+  passwordReset PasswordReset? @relation("UserPasswordReset")
 
   @@map("users")
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  token     String   @unique
+  expiresAt DateTime
+  userId    String   @unique
+
+  user User @relation("UserPasswordReset", fields: [userId], references: [id])
+
+  @@map("password_resets")
 }
 
 model Team {
